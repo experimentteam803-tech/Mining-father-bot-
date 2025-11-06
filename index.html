@@ -64,7 +64,7 @@ main{flex:1;display:flex;flex-direction:column;align-items:center;justify-conten
   padding-top:80px;
   padding-bottom: 90px;
 }
-.section{display:none;width:100%;padding:20px;animation:fadeIn 0.3s ease;position: relative;} /* Added position: relative */
+.section{display:none;width:100%;padding:20px;animation:fadeIn 0.3s ease;}
 #home{display:block;}
 #home h2{font-size:24px;margin-bottom:5px;color:var(--text-light);text-align: center;}
 #totalCoins{font-size:48px;color:var(--secondary-glow);font-weight:700;margin-bottom:40px;text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);text-align: center;}
@@ -336,24 +336,6 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
 }
 /* === OFFERWALL FIX END === */
 
-
-/* === START: ADDED BONUS ICON STYLE === */
-#bonusIcon {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    font-size: 36px;
-    cursor: pointer;
-    z-index: 10;
-    text-shadow: 0 0 15px var(--secondary-glow);
-    transition: transform 0.2s ease-in-out;
-}
-#bonusIcon:hover {
-    transform: scale(1.15);
-}
-/* === END: ADDED BONUS ICON STYLE === */
-
-
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -368,9 +350,6 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     </header>
     <main>
     <section id="home" class="section">
-    <!-- === START: ADDED BONUS ICON === -->
-    <div id="bonusIcon" onclick="showBonusAd()" title="Claim Bonus">🎁</div>
-    <!-- === END: ADDED BONUS ICON === -->
     <div id="totalCoins"><span id="coinCount">0</span></div>
     <h2>Your Coins</h2>
         
@@ -681,21 +660,6 @@ const miningSound = document.getElementById('miningSound');
 const clickSound = document.getElementById('clickSound');
 const successSound = document.getElementById('successSound');
 let hasInteracted = false;
-
-// === START: ADDED BONUS AD FUNCTION ===
-window.showBonusAd = () => {
-    show_9969043({
-      type: 'inApp',
-      inAppSettings: {
-        frequency: 2,
-        capping: 0.1,
-        interval: 30,
-        timeout: 5,
-        everyPage: false
-      }
-    });
-}
-// === END: ADDED BONUS AD FUNCTION ===
 
 function primeAudio() {
     if (hasInteracted) return;
@@ -1559,7 +1523,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadExtraBonusSettings();
     document.body.addEventListener('click', primeAudio, { once: true });
     document.body.addEventListener('click', (event) => {
-        if (event.target.matches('button, .nav-btn, .msg-icon, .profile, .task-item, .close-btn, .task-nav-btn, #bonusIcon')) { // Added #bonusIcon
+        if (event.target.matches('button, .nav-btn, .msg-icon, .profile, .task-item, .close-btn, .task-nav-btn')) {
             playClickSound();
         }
     });
