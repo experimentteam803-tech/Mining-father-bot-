@@ -65,38 +65,75 @@ main{flex:1;display:flex;flex-direction:column;align-items:center;justify-conten
   padding-bottom: 90px;
 }
 .section{display:none;width:100%;padding:20px;animation:fadeIn 0.3s ease;}
-#home{display:block;}
+#home{display:block; position: relative;}
 #home h2{font-size:24px;margin-bottom:5px;color:var(--text-light);text-align: center;}
 #totalCoins{font-size:48px;color:var(--secondary-glow);font-weight:700;margin-bottom:40px;text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);text-align: center;}
 .circle-container{position:relative;display:flex;align-items:center;justify-content:center;width: 100%;margin-top: 20px;}
 
-/* === BONUS ICON STYLE START === */
+
+/* === BONUS ICON STYLE (UPDATED) === */
 #bonusAdIcon {
     position: absolute;
-    /* Adjust positioning to be near the top-right of the circle */
-    top: 0;
-    right: 20px; 
-    font-size: 45px;
+    top: 55px;
+    left: 20px; /* Positioned on the left side */
+    font-size: 35px; /* Made slightly smaller */
     cursor: pointer;
-    transition: transform 0.2s ease, opacity 0.3s ease;
+    transition: transform 0.2s ease;
     z-index: 10;
-    text-shadow: 0 0 15px rgba(255, 215, 0, 0.8), 0 0 25px rgba(255, 165, 0, 0.7);
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
     animation: pulse-bonus-icon 2s infinite ease-in-out;
 }
-
 #bonusAdIcon:hover {
     transform: scale(1.15);
 }
-
 @keyframes pulse-bonus-icon {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.1);
-    }
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
 }
-/* === BONUS ICON STYLE END === */
+
+/* === NEW BONUS MODAL STYLES === */
+.bonus-task-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-dark);
+    padding: 15px;
+    border-radius: 10px;
+    margin: 20px 0;
+    border: 1px solid var(--border-color);
+}
+.bonus-task-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.bonus-task-icon {
+    font-size: 28px;
+}
+.bonus-task-name {
+    display: block;
+    font-weight: 600;
+    color: var(--text-light);
+}
+.bonus-task-desc {
+    display: block;
+    font-size: 13px;
+    color: var(--text-dark);
+}
+.bonus-task-item .claim-btn {
+    margin: 0;
+    padding: 8px 20px;
+    font-size: 16px;
+    background: var(--secondary-glow);
+    color: #000;
+    box-shadow: 0 0 8px var(--secondary-glow), 0 0 20px var(--secondary-glow);
+}
+.bonus-task-item .claim-btn:disabled {
+    background: #888;
+    cursor: not-allowed;
+    opacity: 0.7;
+    box-shadow: none;
+}
 
 
 .circle {
@@ -380,18 +417,19 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     <main>
     <section id="home" class="section">
     <div id="totalCoins"><span id="coinCount">0</span></div>
+    
+    <!-- === UPDATED BONUS ICON: MOVED & ONCLICK CHANGED === -->
+    <div id="bonusAdIcon" onclick="openBonusModal()" title="Get Bonus Rewards">🎁</div>
+    
     <h2>Your Coins</h2>
         
     <button id="extraBonusBtn" class="action-btn" style="display:none;" onclick="startExtraBonusFlow()">🎁 Extra 500 Coins</button>
 
     <div class="circle-container">
-		<!-- === ADDED BONUS ICON === -->
-		<div id="bonusAdIcon" onclick="watchBonusAd()" title="Watch Ad for 25 Bonus Coins">🎁</div>
-		
-		<div class="circle" id="mineCircle">
-			<div class="mining-visual"></div>
-			<div id="miningEffectContainer"></div>
-		</div>
+        <div class="circle" id="mineCircle">
+            <div class="mining-visual"></div>
+            <div id="miningEffectContainer"></div>
+        </div>
     </div>
     <button class="action-btn ad-btn" id="watchAdBtn" onclick="watchAd()">🎬 Watch Ad</button>
     <div id="adStatus">Ads Watched: 0/10</div>
@@ -598,6 +636,26 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     </div>
 </div>
 
+<!-- === NEW BONUS AD MODAL === -->
+<div id="bonusAdModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeBonusModal()">&times;</span>
+        <h3>Bonus Rewards</h3>
+        <p style="color:#aaa; text-align: center; margin-bottom: 25px;">Complete a quick action to earn extra coins!</p>
+        <div class="bonus-task-item">
+            <div class="bonus-task-info">
+                <span class="bonus-task-icon">👀</span>
+                <div>
+                    <span class="bonus-task-name">Watch Video</span>
+                    <span class="bonus-task-desc">In-App Interstitial Ad</span>
+                </div>
+            </div>
+            <button class="claim-btn" onclick="watchBonusAd()">Claim</button>
+        </div>
+    </div>
+</div>
+
+
 <audio id="preMiningSound" src="pre-mining.mp3" preload="auto" loop></audio>
 <audio id="miningSound" src="mining.mp3" preload="auto" loop></audio>
 <audio id="clickSound" src="click.mp3" preload="auto"></audio>
@@ -692,6 +750,7 @@ const miningSound = document.getElementById('miningSound');
 const clickSound = document.getElementById('clickSound');
 const successSound = document.getElementById('successSound');
 let hasInteracted = false;
+const bonusAdModal = document.getElementById('bonusAdModal'); // New Modal variable
 
 function primeAudio() {
     if (hasInteracted) return;
@@ -1071,19 +1130,24 @@ function formatTime(ms) {
 }
 window.canMineAgain = () => { return (Date.now() - window.dailyMinedTimestamp) >= TWO_HOURS_MS; }
 
-// === NEW FUNCTION FOR BONUS AD ICON ===
-window.watchBonusAd = () => {
-    const bonusButton = document.getElementById('bonusAdIcon');
-    // Prevent multiple clicks by disabling the button temporarily
-    bonusButton.style.pointerEvents = 'none';
-    bonusButton.style.opacity = '0.5';
+// === NEW/UPDATED FUNCTIONS FOR BONUS MODAL ===
+window.openBonusModal = () => {
+    bonusAdModal.style.display = 'block';
+}
 
-    // Call the Monetag ad SDK function
+window.closeBonusModal = () => {
+    bonusAdModal.style.display = 'none';
+}
+
+window.watchBonusAd = () => {
+    const bonusButtonInModal = bonusAdModal.querySelector('.claim-btn');
+    bonusButtonInModal.disabled = true;
+    bonusButtonInModal.innerText = 'Loading...';
+
     show_9969043().then(() => {
-        const bonusAmount = 25; // As requested
+        const bonusAmount = 25; // Reward is 25 coins
         window.coins += bonusAmount;
 
-        // Prepare updates for Firebase database
         const updates = { coins: window.coins };
         const historyRef = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
         const historyKey = historyRef.key;
@@ -1093,26 +1157,21 @@ window.watchBonusAd = () => {
             timestamp: Date.now()
         };
 
-        // Send updates to Firebase
         update(window.dbRef, updates);
 
-        // Notify the user of the reward
         WebApp.showPopup({message: `+${bonusAmount} Coins! You earned a bonus for watching the ad!`});
-        playSuccessSound(); // Play a success sound
-
-        // Re-enable the button after a short cooldown period
-        setTimeout(() => {
-            bonusButton.style.pointerEvents = 'auto';
-            bonusButton.style.opacity = '1';
-        }, 2000); // 2-second cooldown to prevent spamming
+        playSuccessSound();
+        
+        closeBonusModal();
+        bonusButtonInModal.disabled = false;
+        bonusButtonInModal.innerText = 'Claim';
 
     }).catch((error) => {
         console.error("Monetag bonus ad error:", error);
-        WebApp.showAlert("The bonus ad could not be shown right now. Please try again in a moment.");
+        WebApp.showAlert("The bonus ad could not be shown. Please try again.");
         
-        // Re-enable the button immediately if there's an error
-        bonusButton.style.pointerEvents = 'auto';
-        bonusButton.style.opacity = '1';
+        bonusButtonInModal.disabled = false;
+        bonusButtonInModal.innerText = 'Claim';
     });
 }
 
@@ -1530,6 +1589,7 @@ window.onclick = function(event) {
     if (event.target == taskDetailModal) { closeTaskModal(); }
     if (event.target == paypalModal) { window.closePaypalModal(); }
     if (event.target == cryptoModal) { window.closeCryptoModal(); }
+    if (event.target == bonusAdModal) { window.closeBonusModal(); } // Added for new bonus modal
 }
 window.shareReferralLink = () => {
     const link = document.getElementById('refLink').innerText;
