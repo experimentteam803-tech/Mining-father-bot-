@@ -70,6 +70,35 @@ main{flex:1;display:flex;flex-direction:column;align-items:center;justify-conten
 #totalCoins{font-size:48px;color:var(--secondary-glow);font-weight:700;margin-bottom:40px;text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);text-align: center;}
 .circle-container{position:relative;display:flex;align-items:center;justify-content:center;width: 100%;margin-top: 20px;}
 
+/* === BONUS ICON STYLE START === */
+#bonusAdIcon {
+    position: absolute;
+    /* Adjust positioning to be near the top-right of the circle */
+    top: 0;
+    right: 20px; 
+    font-size: 45px;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.3s ease;
+    z-index: 10;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.8), 0 0 25px rgba(255, 165, 0, 0.7);
+    animation: pulse-bonus-icon 2s infinite ease-in-out;
+}
+
+#bonusAdIcon:hover {
+    transform: scale(1.15);
+}
+
+@keyframes pulse-bonus-icon {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+/* === BONUS ICON STYLE END === */
+
+
 .circle {
     width:280px;
     height:280px;
@@ -356,10 +385,13 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     <button id="extraBonusBtn" class="action-btn" style="display:none;" onclick="startExtraBonusFlow()">🎁 Extra 500 Coins</button>
 
     <div class="circle-container">
-    <div class="circle" id="mineCircle">
-        <div class="mining-visual"></div>
-        <div id="miningEffectContainer"></div>
-    </div>
+		<!-- === ADDED BONUS ICON === -->
+		<div id="bonusAdIcon" onclick="watchBonusAd()" title="Watch Ad for 25 Bonus Coins">🎁</div>
+		
+		<div class="circle" id="mineCircle">
+			<div class="mining-visual"></div>
+			<div id="miningEffectContainer"></div>
+		</div>
     </div>
     <button class="action-btn ad-btn" id="watchAdBtn" onclick="watchAd()">🎬 Watch Ad</button>
     <div id="adStatus">Ads Watched: 0/10</div>
@@ -1038,6 +1070,53 @@ function formatTime(ms) {
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 window.canMineAgain = () => { return (Date.now() - window.dailyMinedTimestamp) >= TWO_HOURS_MS; }
+
+// === NEW FUNCTION FOR BONUS AD ICON ===
+window.watchBonusAd = () => {
+    const bonusButton = document.getElementById('bonusAdIcon');
+    // Prevent multiple clicks by disabling the button temporarily
+    bonusButton.style.pointerEvents = 'none';
+    bonusButton.style.opacity = '0.5';
+
+    // Call the Monetag ad SDK function
+    show_9969043().then(() => {
+        const bonusAmount = 25; // As requested
+        window.coins += bonusAmount;
+
+        // Prepare updates for Firebase database
+        const updates = { coins: window.coins };
+        const historyRef = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
+        const historyKey = historyRef.key;
+        updates[`coin_history/${historyKey}`] = {
+            reason: 'Bonus Ad Reward',
+            amount: bonusAmount,
+            timestamp: Date.now()
+        };
+
+        // Send updates to Firebase
+        update(window.dbRef, updates);
+
+        // Notify the user of the reward
+        WebApp.showPopup({message: `+${bonusAmount} Coins! You earned a bonus for watching the ad!`});
+        playSuccessSound(); // Play a success sound
+
+        // Re-enable the button after a short cooldown period
+        setTimeout(() => {
+            bonusButton.style.pointerEvents = 'auto';
+            bonusButton.style.opacity = '1';
+        }, 2000); // 2-second cooldown to prevent spamming
+
+    }).catch((error) => {
+        console.error("Monetag bonus ad error:", error);
+        WebApp.showAlert("The bonus ad could not be shown right now. Please try again in a moment.");
+        
+        // Re-enable the button immediately if there's an error
+        bonusButton.style.pointerEvents = 'auto';
+        bonusButton.style.opacity = '1';
+    });
+}
+
+
 window.watchAd = () => {
     const miningStillActive = window.miningEndTime > Date.now();
     const isInCooldown = !window.canMineAgain() && window.dailyMinedTimestamp !== 0;
