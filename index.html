@@ -556,16 +556,6 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     </div>
 </div>
 
-<div id="extraAdModal" class="modal">
-    <div class="modal-content">
-        <h3 id="extraAdModalTitle" style="color: var(--primary-glow); margin-bottom: 15px;">⚠️ Warning: 18+ Ads may appear. View responsibly.</h3>
-        <iframe id="extraAdFrame" src="about:blank" sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-popups-to-escape-sandbox"></iframe>
-        <p id="extraAdProgress" style="text-align:center;"></p>
-        <p id="extraAdTimer" style="text-align:center;"></p>
-        <button id="extraAdContinueBtn" class="action-btn ad-btn" style="width: 100%; margin-top: 0;" disabled>Continue</button>
-    </div>
-</div>
-
 <audio id="preMiningSound" src="pre-mining.mp3" preload="auto" loop></audio>
 <audio id="miningSound" src="mining.mp3" preload="auto" loop></audio>
 <audio id="clickSound" src="click.mp3" preload="auto"></audio>
@@ -660,10 +650,7 @@ const COMMISSION_RATE = 0.05;
 
 // Extra Bonus Variables
 let extraBonus_settings = { requiredCount: 8, reward: 500, ads: [] };
-let extraBonus_adsWatchedCount = 0;
 let extraBonus_claimedTimestamp = 0;
-let extraBonus_timerInterval = null;
-const extraBonus_adDuration = 15;
 
 // DOM Elements
 const mineButton = document.getElementById('mineBtn');
@@ -1073,8 +1060,6 @@ function formatTime(ms) {
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 window.canMineAgain = () => { return (Date.now() - window.dailyMinedTimestamp) >= TWO_HOURS_MS; }
-
-// MONETAG CODE REPLACEMENT STARTS HERE
 window.watchAd = () => {
     const miningStillActive = window.miningEndTime > Date.now();
     const isInCooldown = !window.canMineAgain() && window.dailyMinedTimestamp !== 0;
@@ -1087,7 +1072,6 @@ window.watchAd = () => {
         return;
     }
     watchAdBtn.disabled = true; watchAdBtn.innerText = '🎥 Loading Ad...';
-    
     show_9969043('pop').then(() => {
         window.adsWatched++;
         window.coins += window.AD_REWARD_COINS;
@@ -1112,8 +1096,6 @@ window.watchAd = () => {
         watchAdBtn.disabled = false; watchAdBtn.innerText = '🎬 Watch Ad';
     });
 }
-// MONETAG CODE REPLACEMENT ENDS HERE
-
 function updateAdStatus() {
     const isInCooldown = !window.canMineAgain() && window.dailyMinedTimestamp !== 0;
     if (window.adsWatched >= window.ADS_REQUIRED) {
@@ -1285,59 +1267,21 @@ function updateExtraBonusButtonVisibility() {
 }
 
 window.startExtraBonusFlow = () => {
-    if (!extraBonus_settings.ads || extraBonus_settings.ads.length === 0) {
-        WebApp.showAlert("Bonus ads are not available at the moment. Please try again later.");
-        return;
-    }
-    extraBonus_adsWatchedCount = 0;
-    showNextExtraAd();
+    const extraBonusBtn = document.getElementById('extraBonusBtn');
+    extraBonusBtn.disabled = true;
+    extraBonusBtn.innerText = '🎁 Loading Bonus...';
+
+    show_9969043().then(() => {
+        grantExtraBonusReward();
+    }).catch((error) => {
+        console.error("Monetag extra bonus ad error:", error);
+        WebApp.showAlert("Bonus ad could not be shown. Please try again.");
+        extraBonusBtn.disabled = false;
+        extraBonusBtn.innerText = '🎁 Extra 500 Coins';
+    });
 };
 
-function showNextExtraAd() {
-    if (extraBonus_adsWatchedCount >= extraBonus_settings.requiredCount) {
-        grantExtraBonusReward();
-        return;
-    }
-
-    const modal = document.getElementById('extraAdModal');
-    const iframe = document.getElementById('extraAdFrame');
-    const progressText = document.getElementById('extraAdProgress');
-    const timerText = document.getElementById('extraAdTimer');
-    const continueBtn = document.getElementById('extraAdContinueBtn');
-
-    const adIndex = extraBonus_adsWatchedCount % extraBonus_settings.ads.length;
-    iframe.src = extraBonus_settings.ads[adIndex];
-    
-    progressText.innerText = `Ad ${extraBonus_adsWatchedCount + 1}/${extraBonus_settings.requiredCount} Watched`;
-    continueBtn.disabled = true;
-    modal.style.display = 'block';
-
-    let countdown = extraBonus_adDuration;
-    timerText.innerText = `You can continue in ${countdown}s`;
-
-    clearInterval(extraBonus_timerInterval);
-    extraBonus_timerInterval = setInterval(() => {
-        countdown--;
-        timerText.innerText = `You can continue in ${countdown}s`;
-        if (countdown <= 0) {
-            clearInterval(extraBonus_timerInterval);
-            timerText.innerText = "You can now continue!";
-            continueBtn.disabled = false;
-        }
-    }, 1000);
-
-    continueBtn.onclick = handleExtraAdCompletion;
-}
-
-function handleExtraAdCompletion() {
-    extraBonus_adsWatchedCount++;
-    showNextExtraAd();
-}
-
 function grantExtraBonusReward() {
-    const modal = document.getElementById('extraAdModal');
-    modal.style.display = 'none';
-
     const newCoinBalance = window.coins + extraBonus_settings.reward;
     const now = Date.now();
     
@@ -1360,6 +1304,9 @@ function grantExtraBonusReward() {
     }).catch(error => {
         console.error("Error granting extra bonus:", error);
         WebApp.showAlert("Failed to add bonus coins. Please try again.");
+        const extraBonusBtn = document.getElementById('extraBonusBtn');
+        extraBonusBtn.disabled = false;
+        extraBonusBtn.innerText = '🎁 Extra 500 Coins';
     });
 }
 
