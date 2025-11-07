@@ -1073,6 +1073,8 @@ function formatTime(ms) {
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 window.canMineAgain = () => { return (Date.now() - window.dailyMinedTimestamp) >= TWO_HOURS_MS; }
+
+// MONETAG CODE REPLACEMENT STARTS HERE
 window.watchAd = () => {
     const miningStillActive = window.miningEndTime > Date.now();
     const isInCooldown = !window.canMineAgain() && window.dailyMinedTimestamp !== 0;
@@ -1085,7 +1087,8 @@ window.watchAd = () => {
         return;
     }
     watchAdBtn.disabled = true; watchAdBtn.innerText = '🎥 Loading Ad...';
-    show_9969043().then(() => {
+    
+    show_9969043('pop').then(() => {
         window.adsWatched++;
         window.coins += window.AD_REWARD_COINS;
         const updates = { coins: window.coins, adsWatched: window.adsWatched, adsWatchedTimestamp: Date.now() };
@@ -1109,6 +1112,8 @@ window.watchAd = () => {
         watchAdBtn.disabled = false; watchAdBtn.innerText = '🎬 Watch Ad';
     });
 }
+// MONETAG CODE REPLACEMENT ENDS HERE
+
 function updateAdStatus() {
     const isInCooldown = !window.canMineAgain() && window.dailyMinedTimestamp !== 0;
     if (window.adsWatched >= window.ADS_REQUIRED) {
