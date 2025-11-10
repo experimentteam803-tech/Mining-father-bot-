@@ -779,6 +779,7 @@ function loadUserData() {
         const fetchedCountry = await getUserCountry();
         if (fetchedCountry && data.country !== fetchedCountry) updates.country = fetchedCountry;
 
+        // ===== START: COIN DISAPPEARING FIX =====
         // Calculate offline earnings if it's the first load of the session
         if (!isInitialLoadComplete) {
             isInitialLoadComplete = true; 
@@ -787,31 +788,46 @@ function loadUserData() {
             const sessionEndTime = data.miningEndTime || 0;
             const now = Date.now();
             let offlineCoinsEarned = 0;
+
             if (sessionStartTime > 0 && sessionEndTime > lastSeen) {
                 const calculationStartTime = Math.max(lastSeen, sessionStartTime);
                 const calculationEndTime = Math.min(now, sessionEndTime);
                 const offlineDurationMs = calculationEndTime - calculationStartTime;
+
                 if (offlineDurationMs > 0) {
                     const incrementsMissed = Math.floor(offlineDurationMs / MINING_RATE_MS);
                     const coinsPerIncrementForOffline = (data.country && data.country !== 'IN') ? INTL_COINS_PER_INCREMENT : 0.1;
                     offlineCoinsEarned = incrementsMissed * coinsPerIncrementForOffline;
+                    
                     if (offlineCoinsEarned > 0) {
+                        // 1. First, update the local data object
                         data.coins += offlineCoinsEarned;
+                        
+                        // 2. Add the new coins to the updates object for Firebase
                         updates.coins = data.coins; 
                         const historyRef = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
-                        updates[`coin_history/${historyRef.key}`] = { reason: 'Offline Mining', amount: parseFloat(offlineCoinsEarned.toFixed(3)), timestamp: Date.now() };
+                        updates[`coin_history/${historyRef.key}`] = { 
+                            reason: 'Offline Mining', 
+                            amount: parseFloat(offlineCoinsEarned.toFixed(3)), 
+                            timestamp: Date.now() 
+                        };
                     }
                 }
             }
         }
         
-        // Apply updates if there are any
+        // CRITICAL FIX: Update global state BEFORE database write
+        // This ensures the rest of the app uses the latest coin count immediately
+        updateGlobalState(data); 
+
+        // Now, apply the updates to the database
         if (Object.keys(updates).length > 2 || (updates.country && data.country !== updates.country) || updates.coins) {
              update(window.dbRef, updates).catch(error => console.error("Firebase Update Error (Existing User):", error));
         }
 
-        updateGlobalState(data);
         processDataForStateUpdate();
+        // ===== END: COIN DISAPPEARING FIX =====
+
     }, (error) => {
         console.error("Firebase Read Error (User Data):", error);
         WebApp.showAlert("Failed to load your data. Please check your internet connection and restart. Error: " + error.message);
@@ -1586,7 +1602,7 @@ window.showSection = (sectionId, button) => {
       everyPage: false
     }
   });
-
+  
   document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
   
   const mainElement = document.querySelector('main');
