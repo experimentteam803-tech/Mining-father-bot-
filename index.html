@@ -1575,6 +1575,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.showSection = (sectionId, button) => {
+  // In-App Interstitial Ad Code Added Here
+  show_9969043({
+    type: 'inApp',
+    inAppSettings: {
+      frequency: 2,
+      capping: 0.1,
+      interval: 30,
+      timeout: 5,
+      everyPage: false
+    }
+  });
+
   document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
   
   const mainElement = document.querySelector('main');
