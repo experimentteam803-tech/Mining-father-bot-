@@ -443,36 +443,51 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
             </button>
         </div>
 
-        <!-- Referral Summary -->
-        <div class="wallet-summary" style="margin-top: 25px; padding: 15px;">
-             <div style="display: flex; justify-content: space-around; text-align: center;">
-                <div>
-                    <div class="balance-label">Total Referrals</div>
-                    <div id="total-referrals" class="balance-value" style="font-size: 28px;">0</div>
-                </div>
-                <div>
-                    <div class="balance-label">Total Commission</div>
-                    <div id="total-commission" class="balance-value" style="font-size: 28px;">0</div>
+        <div class="referral-details">
+            <h3 style="color: #fff; margin-bottom: 15px;">How It Works:</h3>
+            <ul class="referral-instruction-list">
+                <li><strong>Share:</strong> Share your unique link with friends and family.</li>
+                <li><strong>Signup Bonus:</strong> You earn **500 Coins** immediately when your friend successfully signs up using your link.</li>
+                <li><strong>Lifetime Commission:</strong> You earn a **5% commission** on all coins your referred users mine, forever!</li>
+            </ul>
+        </div>
+        
+        <button class="action-btn mine-btn" onclick="toggleReferralTracking()" style="width: 100%; margin-top: 15px;">
+            📊 Track My Referrals
+        </button>
+
+        <div id="referral-tracking-details" style="display: none;">
+            <!-- Referral Summary -->
+            <div class="wallet-summary" style="margin-top: 25px; padding: 15px;">
+                 <div style="display: flex; justify-content: space-around; text-align: center;">
+                    <div>
+                        <div class="balance-label">Total Referrals</div>
+                        <div id="total-referrals" class="balance-value" style="font-size: 28px;">0</div>
+                    </div>
+                    <div>
+                        <div class="balance-label">Total Commission</div>
+                        <div id="total-commission" class="balance-value" style="font-size: 28px;">0</div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Referral List -->
-        <div class="history-container" style="margin-top: 25px;">
-            <h3>Your Referred Users</h3>
-            <div style="max-height: 300px; overflow-y: auto;">
-                <table class="history-table">
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Joined On</th>
-                            <th>Commission</th>
-                        </tr>
-                    </thead>
-                    <tbody id="referral-list-table">
-                        <!-- Data will be loaded here by JavaScript -->
-                    </tbody>
-                </table>
+            <!-- Referral List -->
+            <div class="history-container" style="margin-top: 25px;">
+                <h3>Your Referred Users</h3>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Joined On</th>
+                                <th>Commission</th>
+                            </tr>
+                        </thead>
+                        <tbody id="referral-list-table">
+                            <!-- Data will be loaded here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </section>
@@ -673,6 +688,7 @@ let withdrawalSettings = {
 window.referrerId = null; 
 let commissionToAward = 0; 
 const COMMISSION_RATE = 0.05;
+let referralDataLoaded = false; // Flag to check if referral data is loaded
 
 // Extra Bonus Variables
 let extraBonus_settings = { requiredCount: 8, reward: 500, ads: [] };
@@ -1345,6 +1361,21 @@ async function loadReferralData() {
 }
 // ===== END: NEW REFERRAL DATA FUNCTION =====
 
+// ===== START: NEW REFERRAL TOGGLE FUNCTION =====
+window.toggleReferralTracking = () => {
+    const trackingDetails = document.getElementById('referral-tracking-details');
+    if (trackingDetails.style.display === 'none') {
+        trackingDetails.style.display = 'block';
+        if (!referralDataLoaded) { // Only load data on the first click
+            loadReferralData();
+            referralDataLoaded = true;
+        }
+    } else {
+        trackingDetails.style.display = 'none';
+    }
+}
+// ===== END: NEW REFERRAL TOGGLE FUNCTION =====
+
 function loadExtraBonusSettings() {
     onValue(EXTRA_BONUS_SETTINGS_REF, (snapshot) => {
         const settings = snapshot.val();
@@ -1689,12 +1720,6 @@ window.showSection = (sectionId, button) => {
       everyPage: false
     }
   });
-
-  // ===== START: REFERRAL DATA LOADER =====
-  if (sectionId === 'referral') {
-    loadReferralData();
-  }
-  // ===== END: REFERRAL DATA LOADER =====
   
   document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
   
