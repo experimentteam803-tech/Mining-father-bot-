@@ -430,28 +430,54 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
             </div>
         </div>
     </section>
+
+    <!-- ===== START: NEW REFERRAL SECTION HTML ===== -->
     <section id="referral" class="section">
         <h2 style="text-align: center;">🔗 Referral Program</h2>
-        <div id="referral-content">
-            <p style="text-align: center; color: #ccc; margin-bottom: 25px;">Invite your friends to CoinMine and earn substantial rewards!</p>
-            <div class="referral-box">
-                <div style="font-size: 16px; color: var(--primary-glow); font-weight: 600;">Your Unique Referral Link:</div>
-                <p id="refLink">Loading...</p>
-            </div>
-            <div class="referral-details">
-                <h3 style="color: #fff; margin-bottom: 15px;">How It Works:</h3>
-                <ul class="referral-instruction-list">
-                    <li><strong>Share:</strong> Share your unique link with friends and family.</li>
-                    <li><strong>Signup Bonus:</strong> You earn **500 Coins** immediately when your friend successfully signs up using your link.</li>
-                    <li><strong>Lifetime Commission:</strong> You earn a **5% commission** on all coins your referred users mine, forever!</li>
-                </ul>
-                <p style="text-align: center; color: var(--secondary-glow); font-weight: 600; margin-bottom: 20px;">The more you share, the more you earn!</p>
-            </div>
-            <button class="share-btn" onclick="shareReferralLink()">
+        
+        <div class="referral-box">
+            <div style="font-size: 16px; color: var(--primary-glow); font-weight: 600;">Your Unique Referral Link:</div>
+            <p id="refLink">Loading...</p>
+            <button class="share-btn" onclick="shareReferralLink()" style="width: 100%; margin-top: 15px;">
                 📢 Share My Link Now
             </button>
         </div>
+
+        <!-- Referral Summary -->
+        <div class="wallet-summary" style="margin-top: 25px; padding: 15px;">
+             <div style="display: flex; justify-content: space-around; text-align: center;">
+                <div>
+                    <div class="balance-label">Total Referrals</div>
+                    <div id="total-referrals" class="balance-value" style="font-size: 28px;">0</div>
+                </div>
+                <div>
+                    <div class="balance-label">Total Commission</div>
+                    <div id="total-commission" class="balance-value" style="font-size: 28px;">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Referral List -->
+        <div class="history-container" style="margin-top: 25px;">
+            <h3>Your Referred Users</h3>
+            <div style="max-height: 300px; overflow-y: auto;">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Joined On</th>
+                            <th>Commission</th>
+                        </tr>
+                    </thead>
+                    <tbody id="referral-list-table">
+                        <!-- Data will be loaded here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </section>
+    <!-- ===== END: NEW REFERRAL SECTION HTML ===== -->
+
     <section id="gift" class="section">
         <div class="gift-container">
             <h2><span style="color: var(--secondary-glow);">★</span> Redeem Gift Code</h2>
@@ -1195,7 +1221,15 @@ function resumeMiningSession() {
                             amount: parseFloat(accumulatedCommission.toFixed(3)),
                             timestamp: Date.now()
                         };
+                        
+                        // ===== START: NEW REFERRAL TRACKING CODE =====
+                        // Update commission earned for the specific user
+                        const commissionPath = `referredUsers/${TELEGRAM_USER_ID}/commissionEarned`;
+                        const existingCommission = referrerData.referredUsers?.[TELEGRAM_USER_ID]?.commissionEarned || 0;
+                        referrerUpdates[commissionPath] = existingCommission + accumulatedCommission;
+
                         update(referrerRef, referrerUpdates);
+                        // ===== END: NEW REFERRAL TRACKING CODE =====
                     }
                 }).catch(error => {
                     console.error("Error awarding mining commission:", error);
@@ -1257,6 +1291,59 @@ function updateMiningButtonState() {
     updateExtraBonusButtonVisibility();
     updateSoundState();
 }
+
+// ===== START: NEW REFERRAL DATA FUNCTION =====
+async function loadReferralData() {
+    const referralTableBody = document.getElementById('referral-list-table');
+    const totalReferralsEl = document.getElementById('total-referrals');
+    const totalCommissionEl = document.getElementById('total-commission');
+
+    referralTableBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: #888;">Loading...</td></tr>`;
+
+    try {
+        const snapshot = await get(window.dbRef);
+        if (!snapshot.exists()) {
+            referralTableBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: #888;">No data found.</td></tr>`;
+            return;
+        }
+
+        const userData = snapshot.val();
+        const referredUsers = userData.referredUsers || {};
+        const userIds = Object.keys(referredUsers);
+
+        if (userIds.length === 0) {
+            referralTableBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: #888;">You haven't referred anyone yet.</td></tr>`;
+            totalReferralsEl.innerText = '0';
+            totalCommissionEl.innerText = '0';
+            return;
+        }
+        
+        referralTableBody.innerHTML = ''; // Clear loading message
+        let totalCommission = 0;
+
+        userIds.forEach(userId => {
+            const referral = referredUsers[userId];
+            const joinDate = new Date(referral.joinDate).toLocaleDateString();
+            const commissionEarned = referral.commissionEarned || 0;
+            totalCommission += commissionEarned;
+
+            const row = `<tr>
+                <td>${referral.userName || 'Unknown User'}</td>
+                <td>${joinDate}</td>
+                <td>${parseFloat(commissionEarned.toFixed(3))}</td>
+            </tr>`;
+            referralTableBody.innerHTML += row;
+        });
+
+        totalReferralsEl.innerText = userIds.length;
+        totalCommissionEl.innerText = parseFloat(totalCommission.toFixed(3));
+
+    } catch (error) {
+        console.error("Error loading referral data:", error);
+        referralTableBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: #f44336;">Failed to load data.</td></tr>`;
+    }
+}
+// ===== END: NEW REFERRAL DATA FUNCTION =====
 
 function loadExtraBonusSettings() {
     onValue(EXTRA_BONUS_SETTINGS_REF, (snapshot) => {
@@ -1591,7 +1678,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.showSection = (sectionId, button) => {
-  // In-App Interstitial Ad Code Added Here
+  // In-App Interstitial Ad Code
   show_9969043({
     type: 'inApp',
     inAppSettings: {
@@ -1602,6 +1689,12 @@ window.showSection = (sectionId, button) => {
       everyPage: false
     }
   });
+
+  // ===== START: REFERRAL DATA LOADER =====
+  if (sectionId === 'referral') {
+    loadReferralData();
+  }
+  // ===== END: REFERRAL DATA LOADER =====
   
   document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
   
