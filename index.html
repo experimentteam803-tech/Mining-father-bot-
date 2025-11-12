@@ -70,10 +70,15 @@ main{flex:1;display:flex;flex-direction:column;align-items:center;justify-conten
 #totalCoins{font-size:48px;color:var(--secondary-glow);font-weight:700;margin-bottom:10px;text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);text-align: center;}
 
 .daily-reward-btn {
-    padding: 10px 20px;
-    border-radius: 20px;
-    font-weight: 700;
-    font-size: 16px;
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
     cursor: pointer;
     margin-top: 10px;
     margin-bottom: 25px;
@@ -85,7 +90,7 @@ main{flex:1;display:flex;flex-direction:column;align-items:center;justify-conten
     animation: pulse-glow-secondary 2.5s infinite alternate;
 }
 .daily-reward-btn:hover {
-    filter: brightness(1.2); transform: scale(1.03);
+    filter: brightness(1.2); transform: scale(1.05);
 }
 
 .circle-container{position:relative;display:flex;align-items:center;justify-content:center;width: 100%;margin-top: 20px;}
@@ -329,7 +334,6 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     margin-top: 5px;
 }
 
-
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -347,7 +351,7 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     <div id="totalCoins"><span id="coinCount">0</span></div>
     <h2>Your Coins</h2>
     
-    <button id="dailyRewardBtn" class="daily-reward-btn" onclick="showDailyRewardModal()">🎁 Daily Reward</button>
+    <button id="dailyRewardBtn" class="daily-reward-btn" onclick="showDailyRewardModal()">🎁</button>
 
     <div class="circle-container">
     <div class="circle" id="mineCircle">
@@ -1209,11 +1213,16 @@ function updateDailyRewardUI() {
         document.getElementById('dailyCheckinStatus').innerText = 'Come back tomorrow for another reward!';
     } else {
         dailyCheckinBtn.disabled = false;
-        dailyCheckinBtn.innerText = 'Claim 50 Coins';
+        dailyCheckinBtn.innerText = 'Claim 20 Coins';
          document.getElementById('dailyCheckinStatus').innerText = 'Check in every day to earn bonus coins!';
     }
 }
-window.joinChannelAndClaim = () => {
+window.initiateChannelJoin = () => {
+    if (window.hasJoinedChannel) return;
+    sessionStorage.setItem('awaitingChannelJoinVerification', 'true');
+    WebApp.openTelegramLink('https://t.me/MiningFatherOfficial');
+}
+function grantChannelJoinReward() {
     if (window.hasJoinedChannel) return;
     const updates = {
         coins: window.coins + 100,
@@ -1228,7 +1237,6 @@ window.joinChannelAndClaim = () => {
         WebApp.showPopup({message: `+100 Coins for joining the channel!`});
         playSuccessSound();
         updateDailyRewardUI();
-        WebApp.openTelegramLink('https://t.me/MiningFatherOfficial');
     }).catch(error => {
         console.error("Channel claim error:", error);
         WebApp.showAlert("Failed to claim reward. Please try again.");
@@ -1242,7 +1250,7 @@ window.claimDailyCheckin = () => {
                     now.getDate() === lastClaimDate.getDate();
     if (isSameDay) return;
 
-    const dailyReward = 50; 
+    const dailyReward = 20; 
     const updates = {
         coins: window.coins + dailyReward,
         lastDailyClaimTimestamp: Date.now()
@@ -1426,7 +1434,7 @@ window.onclick = function(event) {
     if (event.target == dailyRewardModal) { dailyRewardModal.style.display = "none"; }
 }
 closeDailyRewardModalBtn.onclick = () => { dailyRewardModal.style.display = "none"; };
-joinChannelBtn.onclick = () => joinChannelAndClaim();
+joinChannelBtn.onclick = () => initiateChannelJoin();
 dailyCheckinBtn.onclick = () => claimDailyCheckin();
 
 window.shareReferralLink = () => {
@@ -1505,14 +1513,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) { 
-            const awaitingPopup = sessionStorage.getItem('awaitingVerificationPopup');
-            if (awaitingPopup) {
+            const awaitingTaskPopup = sessionStorage.getItem('awaitingVerificationPopup');
+            if (awaitingTaskPopup) {
                 WebApp.showPopup({
                     title: 'Task in Progress',
                     message: 'Welcome back! Please wait about a minute for the "Verify Task" button to become active, then click it to get your reward.'
                 });
                 sessionStorage.removeItem('awaitingVerificationPopup');
             }
+            
+            const awaitingChannelJoin = sessionStorage.getItem('awaitingChannelJoinVerification');
+            if (awaitingChannelJoin) {
+                sessionStorage.removeItem('awaitingChannelJoinVerification');
+                grantChannelJoinReward();
+            }
+
             loadLiveTasks();
         }
     });
