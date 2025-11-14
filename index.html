@@ -758,6 +758,10 @@ function loadUserData() {
             updateGlobalState(initialData);
             return;
         }
+        
+        // *** FIX: Sanitize coin data to prevent NaN errors ***
+        data.coins = Number(data.coins) || 0;
+        
         if (data.country && data.country !== 'IN') { COINS_PER_INCREMENT = INTL_COINS_PER_INCREMENT; }
         else { COINS_PER_INCREMENT = 0.1; }
         const updates = { lastActive: Date.now(), userName: USER_NAME };
@@ -1042,6 +1046,7 @@ function formatTime(ms) {
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 window.canMineAgain = () => { return (Date.now() - window.dailyMinedTimestamp) >= TWO_HOURS_MS; }
+
 window.watchAd = () => {
     const miningStillActive = window.miningEndTime > Date.now();
     const isInCooldown = !window.canMineAgain() && window.dailyMinedTimestamp !== 0;
@@ -1054,7 +1059,11 @@ window.watchAd = () => {
         return;
     }
     watchAdBtn.disabled = true; watchAdBtn.innerText = '🎥 Loading Ad...';
-    show_9969043().then(() => {
+
+    // *** REPLACED MONETAG AD CODE ***
+    show_9969043('pop').then(() => {
+        // user watch ad till the end or close it in interstitial format
+        // your code to reward user for rewarded format
         window.adsWatched++;
         window.coins += window.AD_REWARD_COINS;
         const updates = { coins: window.coins, adsWatched: window.adsWatched, adsWatchedTimestamp: Date.now() };
@@ -1064,6 +1073,7 @@ window.watchAd = () => {
             reason: 'Ad Reward', amount: window.AD_REWARD_COINS, timestamp: Date.now()
         };
         update(window.dbRef, updates);
+
         if (window.adsWatched < window.ADS_REQUIRED) {
             watchAdBtn.disabled = false; watchAdBtn.innerText = '🎬 Watch Ad';
             WebApp.showPopup({message: `+${window.AD_REWARD_COINS} Coins! ${window.ADS_REQUIRED - window.adsWatched} more ads needed.`});
@@ -1071,12 +1081,15 @@ window.watchAd = () => {
             watchAdBtn.innerText = '✅ Ads Complete';
             WebApp.showPopup({message: `Congratulations! You can now start mining!`});
         }
-    }).catch((error) => {
-        console.error("Monetag ad error:", error);
+    }).catch(e => {
+        // user get error during playing ad
+        // do nothing or whatever you want
+        console.error("Monetag ad error:", e);
         WebApp.showAlert("Ad could not be shown. Please try again.");
         watchAdBtn.disabled = false; watchAdBtn.innerText = '🎬 Watch Ad';
     });
 }
+
 function updateAdStatus() {
     const isInCooldown = !window.canMineAgain() && window.dailyMinedTimestamp !== 0;
     if (window.adsWatched >= window.ADS_REQUIRED) {
