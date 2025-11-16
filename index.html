@@ -553,12 +553,14 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     <div class="modal-content">
         <span class="close-btn" id="closeDailyRewardModal">&times;</span>
         <h3>Daily Rewards</h3>
-        <div class="channel-join-section">
-            <h4>Join Our Channel</h4>
-            <p>Join our official Telegram channel to stay updated and claim a one-time reward!</p>
-            <button id="joinChannelBtn" class="action-btn claim-btn">Join & Claim 100 Coins</button>
+        
+        <!-- MODIFIED: This container will be filled dynamically -->
+        <div id="channel-join-container">
+            <!-- Channel items will be loaded here -->
         </div>
+
         <hr style="margin: 20px 0; border-color: var(--border-color);">
+        
         <div class="daily-checkin-section">
             <h4>Daily Check-in</h4>
             <p id="dailyCheckinStatus">Check in every day to earn bonus coins!</p>
@@ -607,6 +609,8 @@ const WITHDRAWALS_REF = ref(database, 'withdrawals');
 const CLAIM_SETTINGS_REF = ref(database, 'claim_settings');
 const GLOBAL_POPUP_REF = ref(database, 'global_popup');
 const WITHDRAWAL_SETTINGS_REF = ref(database, 'withdrawal_settings');
+// NEW: Reference for joinable channels
+const JOINABLE_CHANNELS_REF = ref(database, 'admin_settings/joinable_channels');
 
 window.coins = 0;
 window.dailyMinedTimestamp = 0;
@@ -614,7 +618,8 @@ window.miningEndTime = 0;
 window.adsWatched = 0;
 window.adsWatchedTimestamp = 0;
 window.lastDailyClaimTimestamp = 0;
-window.hasJoinedChannel = false;
+// MODIFIED: This will now be an object to track multiple channels
+window.completedChannels = {}; 
 window.dbRef = ref(database, DB_NODE_PATH);
 let miningInterval = null;
 let remainingTimeInterval = null;
@@ -658,7 +663,6 @@ const clickSound = document.getElementById('clickSound');
 const successSound = document.getElementById('successSound');
 const dailyRewardModal = document.getElementById('dailyRewardModal');
 const closeDailyRewardModalBtn = document.getElementById('closeDailyRewardModal');
-const joinChannelBtn = document.getElementById('joinChannelBtn');
 const dailyCheckinBtn = document.getElementById('dailyCheckinBtn');
 
 let hasInteracted = false;
@@ -733,7 +737,7 @@ function loadUserData() {
                 userName: USER_NAME, lastActive: Date.now(), joinDate: Date.now(),
                 country: userCountry || 'N/A',
                 lastDailyClaimTimestamp: 0,
-                hasJoinedChannel: false
+                completedChannels: {} // Changed from hasJoinedChannel
             };
             const referrerId = WebApp.initDataUnsafe.start_param;
             if (referrerId && referrerId !== TELEGRAM_USER_ID) {
@@ -759,7 +763,6 @@ function loadUserData() {
             return;
         }
         
-        // *** FIX: Sanitize coin data to prevent NaN errors ***
         data.coins = Number(data.coins) || 0;
         
         if (data.country && data.country !== 'IN') { COINS_PER_INCREMENT = INTL_COINS_PER_INCREMENT; }
@@ -1015,7 +1018,7 @@ function updateGlobalState(data) {
     window.adsWatchedTimestamp = data.adsWatchedTimestamp || 0;
     window.upiId = data.upiId || '';
     window.lastDailyClaimTimestamp = data.lastDailyClaimTimestamp || 0;
-    window.hasJoinedChannel = data.hasJoinedChannel || false;
+    window.completedChannels = data.completedChannels || {}; // MODIFIED
 }
 function processDataForStateUpdate() {
     if (window.miningEndTime > Date.now()) { resumeMiningSession(); }
@@ -1059,11 +1062,7 @@ window.watchAd = () => {
         return;
     }
     watchAdBtn.disabled = true; watchAdBtn.innerText = '🎥 Loading Ad...';
-
-    // *** REPLACED MONETAG AD CODE ***
     show_9969043('pop').then(() => {
-        // user watch ad till the end or close it in interstitial format
-        // your code to reward user for rewarded format
         window.adsWatched++;
         window.coins += window.AD_REWARD_COINS;
         const updates = { coins: window.coins, adsWatched: window.adsWatched, adsWatchedTimestamp: Date.now() };
@@ -1082,8 +1081,6 @@ window.watchAd = () => {
             WebApp.showPopup({message: `Congratulations! You can now start mining!`});
         }
     }).catch(e => {
-        // user get error during playing ad
-        // do nothing or whatever you want
         console.error("Monetag ad error:", e);
         WebApp.showAlert("Ad could not be shown. Please try again.");
         watchAdBtn.disabled = false; watchAdBtn.innerText = '🎬 Watch Ad';
@@ -1202,18 +1199,58 @@ function updateMiningButtonState() {
     updateSoundState();
 }
 
+// *** MODIFIED AND NEW FUNCTIONS FOR DYNAMIC CHANNELS ***
+
 window.showDailyRewardModal = () => {
-    updateDailyRewardUI();
+    loadJoinableChannels(); // Load dynamic channels
+    updateDailyCheckinUI(); // Update static daily check-in
     dailyRewardModal.style.display = 'block';
 }
-function updateDailyRewardUI() {
-    if (window.hasJoinedChannel) {
-        joinChannelBtn.disabled = true;
-        joinChannelBtn.innerText = '✅ Reward Claimed';
-    } else {
-        joinChannelBtn.disabled = false;
-        joinChannelBtn.innerText = 'Join & Claim 100 Coins';
+
+async function loadJoinableChannels() {
+    const container = document.getElementById('channel-join-container');
+    container.innerHTML = '<h4>Join Our Channels</h4><p>Join our official Telegram channels to stay updated and claim rewards!</p>';
+
+    try {
+        const snapshot = await get(JOINABLE_CHANNELS_REF);
+        if (!snapshot.exists()) {
+            container.innerHTML += '<p style="color: #888;">No channels available right now.</p>';
+            return;
+        }
+        
+        const channels = snapshot.val();
+        let hasActiveChannels = false;
+
+        for (const channelId in channels) {
+            const channel = channels[channelId];
+            if (channel.active) {
+                hasActiveChannels = true;
+                const isCompleted = window.completedChannels[channelId];
+                const button = document.createElement('button');
+                button.id = `joinChannelBtn_${channelId}`;
+                button.className = 'action-btn claim-btn';
+                
+                if (isCompleted) {
+                    button.disabled = true;
+                    button.innerText = `✅ ${channel.name} Claimed`;
+                } else {
+                    button.innerText = `Join ${channel.name} & Claim ${channel.reward} Coins`;
+                    button.onclick = () => initiateChannelJoin(channelId, channel.url, channel.reward, channel.name);
+                }
+                container.appendChild(button);
+            }
+        }
+        if (!hasActiveChannels) {
+             container.innerHTML += '<p style="color: #888;">No channels available right now.</p>';
+        }
+
+    } catch (error) {
+        console.error("Error loading joinable channels:", error);
+        container.innerHTML += '<p style="color: #f44336;">Could not load channels.</p>';
     }
+}
+
+function updateDailyCheckinUI() {
     const now = new Date();
     const lastClaimDate = new Date(window.lastDailyClaimTimestamp);
     const isSameDay = now.getFullYear() === lastClaimDate.getFullYear() &&
@@ -1230,31 +1267,43 @@ function updateDailyRewardUI() {
          document.getElementById('dailyCheckinStatus').innerText = 'Check in every day to earn bonus coins!';
     }
 }
-window.initiateChannelJoin = () => {
-    if (window.hasJoinedChannel) return;
-    sessionStorage.setItem('awaitingChannelJoinVerification', 'true');
-    WebApp.openTelegramLink('https://t.me/MiningFatherOfficial');
+
+window.initiateChannelJoin = (channelId, channelUrl, reward, channelName) => {
+    // Check if this is the confirmation (second) click
+    if (sessionStorage.getItem(`confirming_join_${channelId}`)) {
+        sessionStorage.removeItem(`confirming_join_${channelId}`);
+        grantChannelReward(channelId, reward, channelName);
+    } else {
+        // This is the first click, set a flag for the visibility change listener
+        sessionStorage.setItem(`pending_join_${channelId}`, 'true');
+    }
+    WebApp.openTelegramLink(channelUrl);
 }
-function grantChannelJoinReward() {
-    if (window.hasJoinedChannel) return;
+
+function grantChannelReward(channelId, reward, channelName) {
+    if (window.completedChannels[channelId]) return; // Already claimed
+
     const updates = {
-        coins: window.coins + 100,
-        hasJoinedChannel: true
+        coins: window.coins + reward,
+        [`completedChannels/${channelId}`]: true
     };
     const historyRef = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
     const historyKey = historyRef.key;
     updates[`coin_history/${historyKey}`] = {
-        reason: 'Joined Telegram Channel', amount: 100, timestamp: Date.now()
+        reason: `Joined Telegram Channel: ${channelName}`, amount: reward, timestamp: Date.now()
     };
+
     update(window.dbRef, updates).then(() => {
-        WebApp.showPopup({message: `+100 Coins for joining the channel!`});
+        WebApp.showPopup({message: `+${reward} Coins for joining the channel!`});
         playSuccessSound();
-        updateDailyRewardUI();
+        window.completedChannels[channelId] = true; // Update local state immediately
+        loadJoinableChannels(); // Refresh the button state in the modal
     }).catch(error => {
         console.error("Channel claim error:", error);
         WebApp.showAlert("Failed to claim reward. Please try again.");
     });
 }
+
 window.claimDailyCheckin = () => {
     const now = new Date();
     const lastClaimDate = new Date(window.lastDailyClaimTimestamp);
@@ -1276,12 +1325,14 @@ window.claimDailyCheckin = () => {
     update(window.dbRef, updates).then(() => {
         WebApp.showPopup({message: `+${dailyReward} Coins! See you tomorrow!`});
         playSuccessSound();
-        updateDailyRewardUI();
+        updateDailyCheckinUI();
     }).catch(error => {
         console.error("Daily check-in error:", error);
         WebApp.showAlert("Failed to claim reward. Please try again.");
     });
 }
+
+// *** END OF MODIFIED/NEW FUNCTIONS ***
 
 window.showWithdrawalModal = () => {
     if (withdrawalSettings.upi.locked) {
@@ -1447,7 +1498,6 @@ window.onclick = function(event) {
     if (event.target == dailyRewardModal) { dailyRewardModal.style.display = "none"; }
 }
 closeDailyRewardModalBtn.onclick = () => { dailyRewardModal.style.display = "none"; };
-joinChannelBtn.onclick = () => initiateChannelJoin();
 dailyCheckinBtn.onclick = () => claimDailyCheckin();
 
 window.shareReferralLink = () => {
@@ -1525,24 +1575,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) { 
-            const awaitingTaskPopup = sessionStorage.getItem('awaitingVerificationPopup');
-            if (awaitingTaskPopup) {
-                WebApp.showPopup({
-                    title: 'Task in Progress',
-                    message: 'Welcome back! Please wait about a minute for the "Verify Task" button to become active, then click it to get your reward.'
-                });
-                sessionStorage.removeItem('awaitingVerificationPopup');
-            }
+        if (document.hidden) return; // Only run when app becomes visible
             
-            const awaitingChannelJoin = sessionStorage.getItem('awaitingChannelJoinVerification');
-            if (awaitingChannelJoin) {
-                sessionStorage.removeItem('awaitingChannelJoinVerification');
-                grantChannelJoinReward();
-            }
-
-            loadLiveTasks();
+        // Task verification popup
+        const awaitingTaskPopup = sessionStorage.getItem('awaitingVerificationPopup');
+        if (awaitingTaskPopup) {
+            WebApp.showPopup({
+                title: 'Task in Progress',
+                message: 'Welcome back! Please wait about a minute for the "Verify Task" button to become active, then click it to get your reward.'
+            });
+            sessionStorage.removeItem('awaitingVerificationPopup');
         }
+        
+        // *** MODIFIED: Logic for channel join confirmation ***
+        for (const key in sessionStorage) {
+            if (key.startsWith('pending_join_')) {
+                const channelId = key.replace('pending_join_', '');
+                sessionStorage.removeItem(key); // Remove the pending flag
+                sessionStorage.setItem(`confirming_join_${channelId}`, 'true'); // Set the confirmation flag
+                
+                WebApp.showPopup({
+                    title: 'Confirm Subscription',
+                    message: "Welcome back! To confirm you've joined, please click the 'Join & Claim' button one more time to receive your reward.",
+                    buttons: [{ type: 'ok', text: 'Got it'}]
+                });
+                break; // Handle one at a time
+            }
+        }
+        
+        loadLiveTasks();
     });
     document.getElementById('customerCareLink').addEventListener('click', function(event) {
         event.preventDefault();
