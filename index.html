@@ -67,33 +67,9 @@ main{flex:1;display:flex;flex-direction:column;align-items:center;justify-conten
 .section{display:none;width:100%;padding:20px;animation:fadeIn 0.3s ease;}
 #home{display:block;}
 #home h2{font-size:24px;margin-bottom:5px;color:var(--text-light);text-align: center;}
-#totalCoins{font-size:48px;color:var(--secondary-glow);font-weight:700;margin-bottom:10px;text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);text-align: center;}
-
-.daily-reward-btn {
-    width: 50px;
-    height: 50px;
-    font-size: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    line-height: 1;
-    cursor: pointer;
-    margin-top: 10px;
-    margin-bottom: 25px;
-    transition: 0.3s;
-    border: none;
-    background: var(--secondary-glow);
-    color: #000;
-    box-shadow: 0 0 8px var(--secondary-glow), 0 0 20px var(--secondary-glow);
-    animation: pulse-glow-secondary 2.5s infinite alternate;
-}
-.daily-reward-btn:hover {
-    filter: brightness(1.2); transform: scale(1.05);
-}
-
+#totalCoins{font-size:48px;color:var(--secondary-glow);font-weight:700;margin-bottom:40px;text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);text-align: center;}
 .circle-container{position:relative;display:flex;align-items:center;justify-content:center;width: 100%;margin-top: 20px;}
+
 .circle {
     width:280px;
     height:280px;
@@ -253,19 +229,6 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
 .nav-btn{background:none;border:none;color:var(--text-dark);font-size:18px;padding:8px 12px;border-radius:10px;cursor:pointer;transition:0.2s;font-weight:600;}
 .nav-btn.active,.nav-btn:hover{ color:var(--primary-glow); text-shadow: 0 0 10px var(--primary-glow); background: rgba(0, 229, 255, 0.1); }
 @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
-#gift .gift-container { padding: 30px; }
-#gift h2 { margin-top: 0; margin-bottom: 5px; color: var(--text-light); font-weight: 700; font-size: 1.8em; }
-#gift .sub-text { font-size: 0.9em; color: var(--text-dark); margin-bottom: 5px; font-weight: 500;}
-#gift .highlight { font-size: 1em; color: var(--text-light); margin-bottom: 20px; font-weight: 600; padding: 10px 5px; border-bottom: 1px solid var(--border-color); border-top: 1px solid var(--border-color); background: rgba(255, 215, 0, 0.05); }
-#gift .highlight span { color: var(--secondary-glow); }
-#gift input { width: 100%; padding: 15px; border: 2px solid var(--border-color); border-radius: 8px; margin-bottom: 20px; font-size: 1em; background: var(--bg-dark); color: white; box-sizing: border-box; transition: border-color 0.3s; text-align: center; text-transform: uppercase; }
-#gift input:focus { border-color: var(--secondary-glow); outline: none; box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.25); }
-#gift button { width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 1em; font-weight: 700; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); }
-#gift button:hover { filter: brightness(1.2); transform: translateY(-2px); }
-#gift p.separator { color: #888; font-weight: 500; font-size: 0.9em; margin: 15px 0; }
-#gift .note { margin-top: 20px; font-size: 0.9em; color: var(--primary-glow); padding-top: 15px; border-top: 1px dashed #444; font-weight: 500; }
-#gift #claimButtonContainer { display: block; }
-#gift .redeemed-message { display: none; padding: 15px; border-radius: 8px; background: var(--primary-glow); color: #000; font-weight: 700; text-align: center; margin-bottom: 20px; font-size: 1.1em; box-shadow: 0 4px 10px rgba(0, 229, 255, 0.3); letter-spacing: 0.3px; }
 .history-container { margin-top: 30px; }
 .history-container h3 { text-align: center; color: var(--secondary-glow); margin-bottom: 15px; }
 .history-table { width: 100%; border-collapse: collapse; }
@@ -313,27 +276,6 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     color: var(--secondary-glow);
     font-weight: 700;
 }
-
-#dailyRewardModal .modal-content h3 {
-    color: var(--primary-glow);
-    text-align: center;
-    margin-bottom: 20px;
-}
-#dailyRewardModal .modal-content h4 {
-    color: var(--secondary-glow);
-    margin-bottom: 10px;
-}
-#dailyRewardModal .modal-content p {
-     color: var(--text-dark);
-     margin-bottom: 15px;
-     font-size: 14px;
-     text-align: center;
-}
-#dailyRewardModal .modal-content button {
-    width: 100%;
-    margin-top: 5px;
-}
-
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -350,8 +292,6 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     <section id="home" class="section">
     <div id="totalCoins"><span id="coinCount">0</span></div>
     <h2>Your Coins</h2>
-    
-    <button id="dailyRewardBtn" class="daily-reward-btn" onclick="showDailyRewardModal()">🎁</button>
 
     <div class="circle-container">
     <div class="circle" id="mineCircle">
@@ -390,6 +330,23 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
         </div>
     </section>
     
+    <!-- ===== START: NEW WATCH SECTION ===== -->
+    <section id="watch" class="section">
+        <h2 style="text-align: center; color: var(--primary-glow);">Watch Ads & Earn Coins</h2>
+        <div class="wallet-summary" style="margin-top: 30px;">
+            <p style="font-size: 1.2em; color: var(--secondary-glow); font-weight: 600; margin-bottom: 20px;">
+                Watch 20 Ads daily and earn 75 Coins for each Ad!
+            </p>
+            <button class="action-btn ad-btn" id="watchRewardAdBtn" onclick="watchRewardAd()" style="width: 100%;">
+                📺 Watch Ad & Earn 75 Coins
+            </button>
+            <div id="rewardAdStatus" style="color: var(--text-light); font-size: 18px; margin-top: 20px; font-weight: 600; text-align: center;">
+                Ads Watched Today: 0/20
+            </div>
+        </div>
+    </section>
+    <!-- ===== END: NEW WATCH SECTION ===== -->
+
     <section id="wallet" class="section">
         <div style="display: flex; justify-content: center; align-items: center; position: relative; margin-bottom: 10px;">
             <h2 style="text-align: center; margin: 0;">💼 Wallet</h2>
@@ -399,7 +356,7 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
             <div class="balance-info">
                 <div class="balance-label">Current Balance (Coins)</div>
                 <div class="balance-value"><span id="walletCoins">0</span></div>
-                <div class="value-inr">₹ <span id="walletValue">0.00</span> (1000 Coins ≈ ₹1)</div>
+                <div class="value-inr">₹ <span id="walletValue">0.00</span> (10000 Coins ≈ ₹1)</div>
             </div>
             <div class="withdrawal-options">
                 <button class="withdrawal-option-btn upi-btn" onclick="showWithdrawalModal()">UPI</button>
@@ -428,53 +385,75 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
             </div>
         </div>
     </section>
+    
+    <!-- ===== START: NEW REFERRAL SECTION HTML ===== -->
     <section id="referral" class="section">
         <h2 style="text-align: center;">🔗 Referral Program</h2>
-        <div id="referral-content">
-            <p style="text-align: center; color: #ccc; margin-bottom: 25px;">Invite your friends to CoinMine and earn substantial rewards!</p>
-            <div class="referral-box">
-                <div style="font-size: 16px; color: var(--primary-glow); font-weight: 600;">Your Unique Referral Link:</div>
-                <p id="refLink">Loading...</p>
-            </div>
-            <div class="referral-details">
-                <h3 style="color: #fff; margin-bottom: 15px;">How It Works:</h3>
-                <ul class="referral-instruction-list">
-                    <li><strong>Share:</strong> Share your unique link with friends and family.</li>
-                    <li><strong>Signup Bonus:</strong> You earn **500 Coins** immediately when your friend successfully signs up using your link.</li>
-                    <li><strong>Lifetime Commission:</strong> You earn a **5% commission** on all coins your referred users mine, forever!</li>
-                </ul>
-                <p style="text-align: center; color: var(--secondary-glow); font-weight: 600; margin-bottom: 20px;">The more you share, the more you earn!</p>
-            </div>
-            <button class="share-btn" onclick="shareReferralLink()">
+        
+        <div class="referral-box">
+            <div style="font-size: 16px; color: var(--primary-glow); font-weight: 600;">Your Unique Referral Link:</div>
+            <p id="refLink">Loading...</p>
+            <button class="share-btn" onclick="shareReferralLink()" style="width: 100%; margin-top: 15px;">
                 📢 Share My Link Now
             </button>
         </div>
-    </section>
-    <section id="gift" class="section">
-        <div class="gift-container">
-            <h2><span style="color: var(--secondary-glow);">★</span> Redeem Gift Code</h2>
-            <p class="sub-text">A new gift code may be available periodically.</p>
-            <p class="highlight">You can win up to <span>10,000</span> coins from gift codes!</p>
-            <input type="text" id="giftCode" placeholder="Enter your gift code here">
-            <button class="redeem-btn" onclick="redeemCode()">Redeem Code</button>
-            <p class="separator">— OR GET A FREE CODE —</p>
-            <div id="claimButtonContainer">
-              <button class="claim-btn" id="claimBtn1" onclick="claimCode(this, 'placeholder')">
-                Claim Free Gift Code 🚀
-              </button>
+
+        <div class="referral-details">
+            <h3 style="color: #fff; margin-bottom: 15px;">How It Works:</h3>
+            <ul class="referral-instruction-list">
+                <li><strong>Share:</strong> Share your unique link with friends and family.</li>
+                <li><strong>Signup Bonus:</strong> You earn **500 Coins** immediately when your friend successfully signs up using your link.</li>
+                <li><strong>Lifetime Commission:</strong> You earn a **5% commission** on all coins your referred users mine, forever!</li>
+            </ul>
+        </div>
+        
+        <button class="action-btn mine-btn" onclick="toggleReferralTracking()" style="width: 100%; margin-top: 15px;">
+            📊 Track My Referrals
+        </button>
+
+        <div id="referral-tracking-details" style="display: none;">
+            <!-- Referral Summary -->
+            <div class="wallet-summary" style="margin-top: 25px; padding: 15px;">
+                 <div style="display: flex; justify-content: space-around; text-align: center;">
+                    <div>
+                        <div class="balance-label">Total Referrals</div>
+                        <div id="total-referrals" class="balance-value" style="font-size: 28px;">0</div>
+                    </div>
+                    <div>
+                        <div class="balance-label">Total Commission</div>
+                        <div id="total-commission" class="balance-value" style="font-size: 28px;">0</div>
+                    </div>
+                </div>
             </div>
-            <div id="redeemedMessage" class="redeemed-message">
-              This special code has already been redeemed! ✅
+
+            <!-- Referral List -->
+            <div class="history-container" style="margin-top: 25px;">
+                <h3>Your Referred Users</h3>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Joined On</th>
+                                <th>Commission</th>
+                            </tr>
+                        </thead>
+                        <tbody id="referral-list-table">
+                            <!-- Data will be loaded here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <p class="note">Claim a code and redeem it to earn bonus coins 💰</p>
         </div>
     </section>
+    <!-- ===== END: NEW REFERRAL SECTION HTML ===== -->
+
     </main>
     
     <nav class="navbar">
     <button class="nav-btn active" onclick="showSection('home', this)">🏠 Home</button>
     <button class="nav-btn" onclick="showSection('task', this)">🧩 Task</button>
-    <button class="nav-btn" onclick="showSection('gift', this)">🎁 Gift</button>
+    <button class="nav-btn" onclick="showSection('watch', this)">📺 Watch</button>
     <button class="nav-btn" onclick="showSection('wallet', this)">💼 Wallet</button>
     <button class="nav-btn" onclick="showSection('referral', this)">🔗 Referral</button>
     </nav>
@@ -549,27 +528,6 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     </div>
 </div>
 
-<div id="dailyRewardModal" class="modal">
-    <div class="modal-content">
-        <span class="close-btn" id="closeDailyRewardModal">&times;</span>
-        <h3>Daily Rewards</h3>
-        
-        <!-- MODIFIED: This container will be filled dynamically -->
-        <div id="channel-join-container">
-            <!-- Channel items will be loaded here -->
-        </div>
-
-        <hr style="margin: 20px 0; border-color: var(--border-color);">
-        
-        <div class="daily-checkin-section">
-            <h4>Daily Check-in</h4>
-            <p id="dailyCheckinStatus">Check in every day to earn bonus coins!</p>
-            <button id="dailyCheckinBtn" class="action-btn mine-btn">Claim Today's Reward</button>
-        </div>
-    </div>
-</div>
-
-
 <audio id="preMiningSound" src="pre-mining.mp3" preload="auto" loop></audio>
 <audio id="miningSound" src="mining.mp3" preload="auto" loop></audio>
 <audio id="clickSound" src="click.mp3" preload="auto"></audio>
@@ -582,15 +540,29 @@ import { getDatabase, ref, set, onValue, update, push, get, query, orderByChild,
 
 const WebApp = window.Telegram.WebApp;
 WebApp.ready();
-const telegramUser = WebApp.initDataUnsafe.user;
-if (!telegramUser || !telegramUser.id) {
-    alert("Error: Could not get Telegram user data. Please open the app via Telegram.");
-    throw new Error("Missing Telegram User ID");
+
+// Safely get Telegram user data
+let telegramUser = null;
+try {
+    telegramUser = WebApp.initDataUnsafe.user;
+    if (!telegramUser || !telegramUser.id) {
+        // If user data is not found, stop the app and inform the user.
+        WebApp.showAlert("Could not verify your Telegram account. Please try restarting the app through Telegram.", () => WebApp.close());
+        throw new Error("Missing Telegram User ID");
+    }
+} catch (error) {
+    console.error("Critical Error: Could not get Telegram user data.", error);
+    WebApp.showAlert("A critical error occurred while loading your profile. Please restart the app.", () => WebApp.close());
+    // Stop further script execution
+    throw new Error("App halted due to missing user data.");
 }
+
 const TELEGRAM_USER_ID = telegramUser.id.toString();
 const USER_NAME = telegramUser.first_name + (telegramUser.last_name ? ' ' + telegramUser.last_name : '');
 document.getElementById('username').innerText = USER_NAME;
 document.getElementById('refLink').innerText = `https://t.me/MiningFather1Bot?start=${TELEGRAM_USER_ID}`;
+
+// Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyCcgl31JqffVd8bW8G23UurFhxH8IFlEfM",
     authDomain: "mining-bot-276d0.firebaseapp.com",
@@ -600,26 +572,27 @@ const firebaseConfig = {
     appId: "1:263688973305:web:bf3eab880a03dde0ec2b28",
     measurementId: "G-2FWW2SVSLR"
 };
+
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
+
+// Database References
 const DB_NODE_PATH = 'users/' + TELEGRAM_USER_ID;
 const ADMIN_SETTINGS_REF = ref(database, 'admin_settings');
 const TASKS_REF = ref(database, 'tasks');
 const WITHDRAWALS_REF = ref(database, 'withdrawals');
-const CLAIM_SETTINGS_REF = ref(database, 'claim_settings');
 const GLOBAL_POPUP_REF = ref(database, 'global_popup');
 const WITHDRAWAL_SETTINGS_REF = ref(database, 'withdrawal_settings');
-// NEW: Reference for joinable channels
-const JOINABLE_CHANNELS_REF = ref(database, 'admin_settings/joinable_channels');
 
+// Global State Variables
 window.coins = 0;
 window.dailyMinedTimestamp = 0;
 window.miningEndTime = 0;
 window.adsWatched = 0;
 window.adsWatchedTimestamp = 0;
-window.lastDailyClaimTimestamp = 0;
-// MODIFIED: This will now be an object to track multiple channels
-window.completedChannels = {}; 
+window.rewardAdsWatched = 0; // New: For Watch page ads
+window.rewardAdsTimestamp = 0; // New: For Watch page ads reset
 window.dbRef = ref(database, DB_NODE_PATH);
 let miningInterval = null;
 let remainingTimeInterval = null;
@@ -629,12 +602,14 @@ const MINING_RATE_MS = 450;
 const INTL_COINS_PER_INCREMENT = 0.125; 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 const MIN_WITHDRAWAL_COINS = 10000;
 const MIN_INTL_WITHDRAWAL_COINS = 100000;
 const REFERRAL_BONUS = 500;
 window.ADS_REQUIRED = 10;
 window.AD_REWARD_COINS = 5;
-let claimSettings = {};
+const REWARD_ADS_REQUIRED = 20; // New
+const REWARD_AD_COINS = 75; // New
 let isInitialLoadComplete = false;
 let withdrawalSettings = {
     upi: { locked: false, message: '' },
@@ -642,6 +617,13 @@ let withdrawalSettings = {
     crypto: { locked: false, message: '' }
 };
 
+// Referral System Variables
+window.referrerId = null; 
+let commissionToAward = 0; 
+const COMMISSION_RATE = 0.05;
+let referralDataLoaded = false; // Flag to check if referral data is loaded
+
+// DOM Elements
 const mineButton = document.getElementById('mineBtn');
 const watchAdBtn = document.getElementById('watchAdBtn');
 const adStatusDisplay = document.getElementById('adStatus');
@@ -661,28 +643,20 @@ const preMiningSound = document.getElementById('preMiningSound');
 const miningSound = document.getElementById('miningSound');
 const clickSound = document.getElementById('clickSound');
 const successSound = document.getElementById('successSound');
-const dailyRewardModal = document.getElementById('dailyRewardModal');
-const closeDailyRewardModalBtn = document.getElementById('closeDailyRewardModal');
-const dailyCheckinBtn = document.getElementById('dailyCheckinBtn');
 
+// Audio Elements
 let hasInteracted = false;
 
+// --- AUDIO FUNCTIONS ---
 function primeAudio() {
     if (hasInteracted) return;
     hasInteracted = true;
-    const sounds = [preMiningSound, miningSound, clickSound, successSound];
-    sounds.forEach(sound => { sound.play().then(() => sound.pause()).catch(() => {}); });
+    [preMiningSound, miningSound, clickSound, successSound].forEach(sound => {
+        sound.play().then(() => sound.pause()).catch(() => {});
+    });
 }
-function playClickSound() {
-    if (!hasInteracted) return;
-    clickSound.currentTime = 0;
-    clickSound.play().catch(e => {});
-}
-function playSuccessSound() {
-    if (!hasInteracted) return;
-    successSound.currentTime = 0;
-    successSound.play().catch(e => {});
-}
+function playClickSound() { if (hasInteracted) { clickSound.currentTime = 0; clickSound.play().catch(e => {}); }}
+function playSuccessSound() { if (hasInteracted) { successSound.currentTime = 0; successSound.play().catch(e => {}); }}
 function stopAllMiningSounds() {
     preMiningSound.pause(); preMiningSound.currentTime = 0;
     miningSound.pause(); miningSound.currentTime = 0;
@@ -692,27 +666,23 @@ function updateSoundState() {
     const miningIsActive = window.miningEndTime > Date.now();
     const isReadyToMine = window.canMineAgain() && window.adsWatched >= window.ADS_REQUIRED;
     const homeSectionIsVisible = document.getElementById('home').style.display !== 'none';
+
     if (miningIsActive) {
-        if (miningSound.paused) {
-            preMiningSound.pause(); preMiningSound.currentTime = 0;
-            miningSound.play().catch(e => {});
-        }
+        if (miningSound.paused) { preMiningSound.pause(); preMiningSound.currentTime = 0; miningSound.play().catch(e => {}); }
     } else if (homeSectionIsVisible && isReadyToMine) {
-        if (preMiningSound.paused) {
-            miningSound.pause(); miningSound.currentTime = 0;
-            preMiningSound.play().catch(e => {});
-        }
+        if (preMiningSound.paused) { miningSound.pause(); miningSound.currentTime = 0; preMiningSound.play().catch(e => {}); }
     } else {
-        preMiningSound.pause(); preMiningSound.currentTime = 0;
-        miningSound.pause(); miningSound.currentTime = 0;
+        stopAllMiningSounds();
     }
 }
+
+// --- DATA HANDLING FUNCTIONS ---
 async function getUserCountry() {
     const storedCountry = localStorage.getItem('userCountryCode');
-    if (storedCountry) { return storedCountry; }
+    if (storedCountry) return storedCountry;
     try {
         const response = await fetch('https://ipapi.co/json/');
-        if (!response.ok) { throw new Error('Network response was not ok'); }
+        if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
         const countryCode = data.country_code;
         if (countryCode) {
@@ -730,15 +700,18 @@ function loadUserData() {
     onValue(window.dbRef, async (snapshot) => {
         let data = snapshot.val();
         if (!data) {
+            // This is a new user, create their profile
+            console.log("New user detected. Creating profile...");
             const userCountry = await getUserCountry();
             const initialData = {
                 coins: 0, dailyMinedTimestamp: 0, miningEndTime: 0, adsWatched: 0,
                 adsWatchedTimestamp: 0, upiId: '', telegramId: TELEGRAM_USER_ID,
                 userName: USER_NAME, lastActive: Date.now(), joinDate: Date.now(),
                 country: userCountry || 'N/A',
-                lastDailyClaimTimestamp: 0,
-                completedChannels: {} // Changed from hasJoinedChannel
+                rewardAdsWatched: 0, rewardAdsTimestamp: 0 // New fields for new users
             };
+            
+            // Handle referral
             const referrerId = WebApp.initDataUnsafe.start_param;
             if (referrerId && referrerId !== TELEGRAM_USER_ID) {
                 initialData.referredBy = referrerId;
@@ -746,30 +719,38 @@ function loadUserData() {
                 get(referrerRef).then((referrerSnapshot) => {
                     if (referrerSnapshot.exists()) {
                         const referrerData = referrerSnapshot.val();
-                        const newBalance = (referrerData.coins || 0) + REFERRAL_BONUS;
                         const referrerUpdates = {};
-                        referrerUpdates.coins = newBalance;
+                        referrerUpdates.coins = (referrerData.coins || 0) + REFERRAL_BONUS;
+                        referrerUpdates.referralCount = (referrerData.referralCount || 0) + 1;
+                        referrerUpdates[`referredUsers/${TELEGRAM_USER_ID}`] = { userName: USER_NAME, joinDate: Date.now() };
                         const historyRef = push(ref(database, `users/${referrerId}/coin_history`));
-                        const historyKey = historyRef.key;
-                        referrerUpdates[`coin_history/${historyKey}`] = {
-                            reason: `Referral Bonus for ${USER_NAME}`, amount: REFERRAL_BONUS, timestamp: Date.now()
-                        };
+                        referrerUpdates[`coin_history/${historyRef.key}`] = { reason: `Referral Bonus for ${USER_NAME}`, amount: REFERRAL_BONUS, timestamp: Date.now() };
                         update(referrerRef, referrerUpdates);
                     }
                 }).catch(error => console.error("Error awarding referral bonus:", error));
             }
-            set(window.dbRef, initialData);
-            updateGlobalState(initialData);
+
+            // Set the new user data in Firebase with error handling
+            try {
+                await set(window.dbRef, initialData);
+                console.log("User profile created successfully in Firebase.");
+                updateGlobalState(initialData); // Update UI immediately
+            } catch (error) {
+                console.error("Firebase Write Error (User Creation):", error);
+                WebApp.showAlert("Failed to create your profile. Please check your internet connection and restart the app. Error: " + error.message);
+            }
             return;
         }
         
-        data.coins = Number(data.coins) || 0;
+        // This is an existing user, update their data
+        if (data.country && data.country !== 'IN') COINS_PER_INCREMENT = INTL_COINS_PER_INCREMENT;
+        else COINS_PER_INCREMENT = 0.1;
         
-        if (data.country && data.country !== 'IN') { COINS_PER_INCREMENT = INTL_COINS_PER_INCREMENT; }
-        else { COINS_PER_INCREMENT = 0.1; }
         const updates = { lastActive: Date.now(), userName: USER_NAME };
         const fetchedCountry = await getUserCountry();
-        if (fetchedCountry && data.country !== fetchedCountry) { updates.country = fetchedCountry; }
+        if (fetchedCountry && data.country !== fetchedCountry) updates.country = fetchedCountry;
+
+        // ===== START: COIN DISAPPEARING FIX =====
         if (!isInitialLoadComplete) {
             isInitialLoadComplete = true; 
             const lastSeen = data.lastActive || 0;
@@ -777,34 +758,43 @@ function loadUserData() {
             const sessionEndTime = data.miningEndTime || 0;
             const now = Date.now();
             let offlineCoinsEarned = 0;
+
             if (sessionStartTime > 0 && sessionEndTime > lastSeen) {
                 const calculationStartTime = Math.max(lastSeen, sessionStartTime);
                 const calculationEndTime = Math.min(now, sessionEndTime);
                 const offlineDurationMs = calculationEndTime - calculationStartTime;
+
                 if (offlineDurationMs > 0) {
                     const incrementsMissed = Math.floor(offlineDurationMs / MINING_RATE_MS);
                     const coinsPerIncrementForOffline = (data.country && data.country !== 'IN') ? INTL_COINS_PER_INCREMENT : 0.1;
                     offlineCoinsEarned = incrementsMissed * coinsPerIncrementForOffline;
+                    
                     if (offlineCoinsEarned > 0) {
                         data.coins += offlineCoinsEarned;
                         updates.coins = data.coins; 
                         const historyRef = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
-                        const historyKey = historyRef.key;
-                        updates[`coin_history/${historyKey}`] = {
-                            reason: 'Offline Mining', amount: parseFloat(offlineCoinsEarned.toFixed(3)), timestamp: Date.now()
+                        updates[`coin_history/${historyRef.key}`] = { 
+                            reason: 'Offline Mining', 
+                            amount: parseFloat(offlineCoinsEarned.toFixed(3)), 
+                            timestamp: Date.now() 
                         };
                     }
                 }
             }
         }
+        
+        updateGlobalState(data); 
+
         if (Object.keys(updates).length > 2 || (updates.country && data.country !== updates.country) || updates.coins) {
              update(window.dbRef, updates);
         }
-        updateGlobalState(data);
+
         processDataForStateUpdate();
+        // ===== END: COIN DISAPPEARING FIX =====
+
     }, (error) => {
         console.error("Firebase Read Error (User Data):", error);
-        WebApp.showAlert("Failed to load user data.");
+        WebApp.showAlert("Failed to load your data. Please check your internet connection and restart. Error: " + error.message);
     });
 }
 function listenForNotifications() {
@@ -1017,8 +1007,9 @@ function updateGlobalState(data) {
     window.adsWatched = data.adsWatched || 0;
     window.adsWatchedTimestamp = data.adsWatchedTimestamp || 0;
     window.upiId = data.upiId || '';
-    window.lastDailyClaimTimestamp = data.lastDailyClaimTimestamp || 0;
-    window.completedChannels = data.completedChannels || {}; // MODIFIED
+    window.referrerId = data.referredBy || null;
+    window.rewardAdsWatched = data.rewardAdsWatched || 0; // New
+    window.rewardAdsTimestamp = data.rewardAdsTimestamp || 0; // New
 }
 function processDataForStateUpdate() {
     if (window.miningEndTime > Date.now()) { resumeMiningSession(); }
@@ -1028,14 +1019,22 @@ function processDataForStateUpdate() {
         updateDatabase(updates);
         window.dailyMinedTimestamp = 0; window.adsWatched = 0; window.adsWatchedTimestamp = 0;
     }
+    // New: Check and reset reward ads daily
+    if (Date.now() - window.rewardAdsTimestamp >= TWENTY_FOUR_HOURS_MS) {
+        if(window.rewardAdsWatched > 0) { // Only update if it's not already 0
+            updateDatabase({ rewardAdsWatched: 0, rewardAdsTimestamp: 0 });
+        }
+    }
     updateCoinDisplays();
     updateMiningButtonState();
+    updateRewardAdStatus(); // New
 }
 window.updateDatabase = (updates) => {
     update(window.dbRef, updates).catch(error => console.error("Database Write Error:", error));
 };
 function updateCoinDisplays() {
-    const inrValue = (window.coins / 1000).toFixed(2);
+    // UPDATED: Coin value changed to 10000
+    const inrValue = (window.coins / 10000).toFixed(2);
     const coinsStr = Math.floor(window.coins).toLocaleString();
     document.getElementById('coinCount').innerText = coinsStr;
     document.getElementById('walletCoins').innerText = coinsStr;
@@ -1049,7 +1048,6 @@ function formatTime(ms) {
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 window.canMineAgain = () => { return (Date.now() - window.dailyMinedTimestamp) >= TWO_HOURS_MS; }
-
 window.watchAd = () => {
     const miningStillActive = window.miningEndTime > Date.now();
     const isInCooldown = !window.canMineAgain() && window.dailyMinedTimestamp !== 0;
@@ -1067,12 +1065,10 @@ window.watchAd = () => {
         window.coins += window.AD_REWARD_COINS;
         const updates = { coins: window.coins, adsWatched: window.adsWatched, adsWatchedTimestamp: Date.now() };
         const historyRef = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
-        const historyKey = historyRef.key;
-        updates[`coin_history/${historyKey}`] = {
+        updates[`coin_history/${historyRef.key}`] = {
             reason: 'Ad Reward', amount: window.AD_REWARD_COINS, timestamp: Date.now()
         };
         update(window.dbRef, updates);
-
         if (window.adsWatched < window.ADS_REQUIRED) {
             watchAdBtn.disabled = false; watchAdBtn.innerText = '🎬 Watch Ad';
             WebApp.showPopup({message: `+${window.AD_REWARD_COINS} Coins! ${window.ADS_REQUIRED - window.adsWatched} more ads needed.`});
@@ -1080,13 +1076,12 @@ window.watchAd = () => {
             watchAdBtn.innerText = '✅ Ads Complete';
             WebApp.showPopup({message: `Congratulations! You can now start mining!`});
         }
-    }).catch(e => {
-        console.error("Monetag ad error:", e);
+    }).catch((error) => {
+        console.error("Monetag ad error:", error);
         WebApp.showAlert("Ad could not be shown. Please try again.");
         watchAdBtn.disabled = false; watchAdBtn.innerText = '🎬 Watch Ad';
     });
 }
-
 function updateAdStatus() {
     const isInCooldown = !window.canMineAgain() && window.dailyMinedTimestamp !== 0;
     if (window.adsWatched >= window.ADS_REQUIRED) {
@@ -1143,11 +1138,52 @@ function resumeMiningSession() {
     if (remainingTime <= 0) return;
     clearInterval(miningInterval); clearInterval(remainingTimeInterval);
     incrementCounter = 0;
+    
     miningInterval = setInterval(() => {
         window.coins += COINS_PER_INCREMENT;
+        if (window.referrerId) {
+            const commission = COINS_PER_INCREMENT * COMMISSION_RATE;
+            commissionToAward += commission;
+        }
         incrementCounter++;
-        if (incrementCounter % 20 === 0) { window.updateDatabase({ coins: window.coins }); }
-        startMiningAnimation(); showMiningIncrement(); updateCoinDisplays();
+        if (incrementCounter % 20 === 0) {
+            const updates = { coins: window.coins };
+            window.updateDatabase(updates);
+            if (commissionToAward > 0 && window.referrerId) {
+                const referrerRef = ref(database, 'users/' + window.referrerId);
+                const accumulatedCommission = commissionToAward; 
+                commissionToAward = 0; 
+                get(referrerRef).then(snapshot => {
+                    if (snapshot.exists()) {
+                        const referrerData = snapshot.val();
+                        const referrerUpdates = {};
+                        referrerUpdates.coins = (referrerData.coins || 0) + accumulatedCommission;
+                        const historyRef = push(ref(database, `users/${window.referrerId}/coin_history`));
+                        const historyKey = historyRef.key;
+                        referrerUpdates[`coin_history/${historyKey}`] = {
+                            reason: `5% commission from ${USER_NAME}`,
+                            amount: parseFloat(accumulatedCommission.toFixed(3)),
+                            timestamp: Date.now()
+                        };
+                        
+                        // ===== START: NEW REFERRAL TRACKING CODE =====
+                        // Update commission earned for the specific user
+                        const commissionPath = `referredUsers/${TELEGRAM_USER_ID}/commissionEarned`;
+                        const existingCommission = referrerData.referredUsers?.[TELEGRAM_USER_ID]?.commissionEarned || 0;
+                        referrerUpdates[commissionPath] = existingCommission + accumulatedCommission;
+
+                        update(referrerRef, referrerUpdates);
+                        // ===== END: NEW REFERRAL TRACKING CODE =====
+                    }
+                }).catch(error => {
+                    console.error("Error awarding mining commission:", error);
+                    commissionToAward += accumulatedCommission;
+                });
+            }
+        }
+        startMiningAnimation();
+        showMiningIncrement();
+        updateCoinDisplays();
     }, MINING_RATE_MS);
     remainingTimeInterval = setInterval(updateCountdown, 1000);
     updateCountdown();
@@ -1199,140 +1235,126 @@ function updateMiningButtonState() {
     updateSoundState();
 }
 
-// *** MODIFIED AND NEW FUNCTIONS FOR DYNAMIC CHANNELS ***
+// ===== START: NEW REFERRAL DATA FUNCTION =====
+async function loadReferralData() {
+    const referralTableBody = document.getElementById('referral-list-table');
+    const totalReferralsEl = document.getElementById('total-referrals');
+    const totalCommissionEl = document.getElementById('total-commission');
 
-window.showDailyRewardModal = () => {
-    loadJoinableChannels(); // Load dynamic channels
-    updateDailyCheckinUI(); // Update static daily check-in
-    dailyRewardModal.style.display = 'block';
-}
-
-async function loadJoinableChannels() {
-    const container = document.getElementById('channel-join-container');
-    container.innerHTML = '<h4>Join Our Channels</h4><p>Join our official Telegram channels to stay updated and claim rewards!</p>';
+    referralTableBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: #888;">Loading...</td></tr>`;
 
     try {
-        const snapshot = await get(JOINABLE_CHANNELS_REF);
+        const snapshot = await get(window.dbRef);
         if (!snapshot.exists()) {
-            container.innerHTML += '<p style="color: #888;">No channels available right now.</p>';
+            referralTableBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: #888;">No data found.</td></tr>`;
+            return;
+        }
+
+        const userData = snapshot.val();
+        const referredUsers = userData.referredUsers || {};
+        const userIds = Object.keys(referredUsers);
+
+        if (userIds.length === 0) {
+            referralTableBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: #888;">You haven't referred anyone yet.</td></tr>`;
+            totalReferralsEl.innerText = '0';
+            totalCommissionEl.innerText = '0';
             return;
         }
         
-        const channels = snapshot.val();
-        let hasActiveChannels = false;
+        referralTableBody.innerHTML = ''; // Clear loading message
+        let totalCommission = 0;
 
-        for (const channelId in channels) {
-            const channel = channels[channelId];
-            if (channel.active) {
-                hasActiveChannels = true;
-                const isCompleted = window.completedChannels[channelId];
-                const button = document.createElement('button');
-                button.id = `joinChannelBtn_${channelId}`;
-                button.className = 'action-btn claim-btn';
-                
-                if (isCompleted) {
-                    button.disabled = true;
-                    button.innerText = `✅ ${channel.name} Claimed`;
-                } else {
-                    button.innerText = `Join ${channel.name} & Claim ${channel.reward} Coins`;
-                    button.onclick = () => initiateChannelJoin(channelId, channel.url, channel.reward, channel.name);
-                }
-                container.appendChild(button);
-            }
-        }
-        if (!hasActiveChannels) {
-             container.innerHTML += '<p style="color: #888;">No channels available right now.</p>';
-        }
+        userIds.forEach(userId => {
+            const referral = referredUsers[userId];
+            const joinDate = new Date(referral.joinDate).toLocaleDateString();
+            const commissionEarned = referral.commissionEarned || 0;
+            totalCommission += commissionEarned;
+
+            const row = `<tr>
+                <td>${referral.userName || 'Unknown User'}</td>
+                <td>${joinDate}</td>
+                <td>${parseFloat(commissionEarned.toFixed(3))}</td>
+            </tr>`;
+            referralTableBody.innerHTML += row;
+        });
+
+        totalReferralsEl.innerText = userIds.length;
+        totalCommissionEl.innerText = parseFloat(totalCommission.toFixed(3));
 
     } catch (error) {
-        console.error("Error loading joinable channels:", error);
-        container.innerHTML += '<p style="color: #f44336;">Could not load channels.</p>';
+        console.error("Error loading referral data:", error);
+        referralTableBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: #f44336;">Failed to load data.</td></tr>`;
     }
 }
+// ===== END: NEW REFERRAL DATA FUNCTION =====
 
-function updateDailyCheckinUI() {
-    const now = new Date();
-    const lastClaimDate = new Date(window.lastDailyClaimTimestamp);
-    const isSameDay = now.getFullYear() === lastClaimDate.getFullYear() &&
-                    now.getMonth() === lastClaimDate.getMonth() &&
-                    now.getDate() === lastClaimDate.getDate();
-
-    if (isSameDay) {
-        dailyCheckinBtn.disabled = true;
-        dailyCheckinBtn.innerText = 'Claimed Today';
-        document.getElementById('dailyCheckinStatus').innerText = 'Come back tomorrow for another reward!';
+// ===== START: NEW REFERRAL TOGGLE FUNCTION =====
+window.toggleReferralTracking = () => {
+    const trackingDetails = document.getElementById('referral-tracking-details');
+    if (trackingDetails.style.display === 'none') {
+        trackingDetails.style.display = 'block';
+        if (!referralDataLoaded) { // Only load data on the first click
+            loadReferralData();
+            referralDataLoaded = true;
+        }
     } else {
-        dailyCheckinBtn.disabled = false;
-        dailyCheckinBtn.innerText = 'Claim 20 Coins';
-         document.getElementById('dailyCheckinStatus').innerText = 'Check in every day to earn bonus coins!';
+        trackingDetails.style.display = 'none';
+    }
+}
+// ===== END: NEW REFERRAL TOGGLE FUNCTION =====
+
+
+// ===== START: NEW FUNCTIONS FOR WATCH PAGE =====
+function updateRewardAdStatus() {
+    const statusEl = document.getElementById('rewardAdStatus');
+    const buttonEl = document.getElementById('watchRewardAdBtn');
+    if (statusEl) {
+        statusEl.innerText = `Ads Watched Today: ${window.rewardAdsWatched}/${REWARD_ADS_REQUIRED}`;
+    }
+    if (buttonEl) {
+        if (window.rewardAdsWatched >= REWARD_ADS_REQUIRED) {
+            buttonEl.disabled = true;
+            buttonEl.innerText = '✅ All Ads Watched for Today';
+        } else {
+            buttonEl.disabled = false;
+            buttonEl.innerText = `📺 Watch Ad & Earn ${REWARD_AD_COINS} Coins`;
+        }
     }
 }
 
-window.initiateChannelJoin = (channelId, channelUrl, reward, channelName) => {
-    // Check if this is the confirmation (second) click
-    if (sessionStorage.getItem(`confirming_join_${channelId}`)) {
-        sessionStorage.removeItem(`confirming_join_${channelId}`);
-        grantChannelReward(channelId, reward, channelName);
-    } else {
-        // This is the first click, set a flag for the visibility change listener
-        sessionStorage.setItem(`pending_join_${channelId}`, 'true');
+window.watchRewardAd = () => {
+    if (window.rewardAdsWatched >= REWARD_ADS_REQUIRED) {
+        WebApp.showAlert("You have already watched all available ads for today. Come back tomorrow!");
+        return;
     }
-    WebApp.openTelegramLink(channelUrl);
+
+    const watchRewardAdBtn = document.getElementById('watchRewardAdBtn');
+    watchRewardAdBtn.disabled = true;
+    watchRewardAdBtn.innerText = '🎥 Loading Ad...';
+
+    // IMPORTANT: Replace with your actual Adsgram link structure
+    const adsgramLink = `https://p.adsgram.ai/16570/int-18802?user_id=${TELEGRAM_USER_ID}`;
+
+    try {
+        Telegram.WebApp.openLink(adsgramLink);
+        WebApp.showAlert("You will receive your reward after watching the ad completely. The reward is added via server, it may take a moment to reflect.");
+        setTimeout(() => {
+            if (window.rewardAdsWatched < REWARD_ADS_REQUIRED) {
+                watchRewardAdBtn.disabled = false;
+                watchRewardAdBtn.innerText = `📺 Watch Ad & Earn ${REWARD_AD_COINS} Coins`;
+            }
+        }, 3000);
+    } catch (error) {
+        console.error("Adsgram link error:", error);
+        WebApp.showAlert("Ad could not be shown. Please try again.");
+        watchRewardAdBtn.disabled = false;
+        watchRewardAdBtn.innerText = `📺 Watch Ad & Earn ${REWARD_AD_COINS} Coins`;
+    }
+    // REMINDER: The actual reward (75 coins) MUST be granted via a Postback URL from Adsgram to your server (e.g., a Firebase Cloud Function).
+    // The server will then update the user's `coins` and `rewardAdsWatched` in Firebase.
 }
+// ===== END: NEW FUNCTIONS FOR WATCH PAGE =====
 
-function grantChannelReward(channelId, reward, channelName) {
-    if (window.completedChannels[channelId]) return; // Already claimed
-
-    const updates = {
-        coins: window.coins + reward,
-        [`completedChannels/${channelId}`]: true
-    };
-    const historyRef = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
-    const historyKey = historyRef.key;
-    updates[`coin_history/${historyKey}`] = {
-        reason: `Joined Telegram Channel: ${channelName}`, amount: reward, timestamp: Date.now()
-    };
-
-    update(window.dbRef, updates).then(() => {
-        WebApp.showPopup({message: `+${reward} Coins for joining the channel!`});
-        playSuccessSound();
-        window.completedChannels[channelId] = true; // Update local state immediately
-        loadJoinableChannels(); // Refresh the button state in the modal
-    }).catch(error => {
-        console.error("Channel claim error:", error);
-        WebApp.showAlert("Failed to claim reward. Please try again.");
-    });
-}
-
-window.claimDailyCheckin = () => {
-    const now = new Date();
-    const lastClaimDate = new Date(window.lastDailyClaimTimestamp);
-    const isSameDay = now.getFullYear() === lastClaimDate.getFullYear() &&
-                    now.getMonth() === lastClaimDate.getMonth() &&
-                    now.getDate() === lastClaimDate.getDate();
-    if (isSameDay) return;
-
-    const dailyReward = 20; 
-    const updates = {
-        coins: window.coins + dailyReward,
-        lastDailyClaimTimestamp: Date.now()
-    };
-     const historyRef = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
-    const historyKey = historyRef.key;
-    updates[`coin_history/${historyKey}`] = {
-        reason: 'Daily Check-in', amount: dailyReward, timestamp: Date.now()
-    };
-    update(window.dbRef, updates).then(() => {
-        WebApp.showPopup({message: `+${dailyReward} Coins! See you tomorrow!`});
-        playSuccessSound();
-        updateDailyCheckinUI();
-    }).catch(error => {
-        console.error("Daily check-in error:", error);
-        WebApp.showAlert("Failed to claim reward. Please try again.");
-    });
-}
-
-// *** END OF MODIFIED/NEW FUNCTIONS ***
 
 window.showWithdrawalModal = () => {
     if (withdrawalSettings.upi.locked) {
@@ -1495,76 +1517,18 @@ window.onclick = function(event) {
     if (event.target == taskDetailModal) { closeTaskModal(); }
     if (event.target == paypalModal) { window.closePaypalModal(); }
     if (event.target == cryptoModal) { window.closeCryptoModal(); }
-    if (event.target == dailyRewardModal) { dailyRewardModal.style.display = "none"; }
 }
-closeDailyRewardModalBtn.onclick = () => { dailyRewardModal.style.display = "none"; };
-dailyCheckinBtn.onclick = () => claimDailyCheckin();
-
 window.shareReferralLink = () => {
     const link = document.getElementById('refLink').innerText;
     const shareText = `💰 Join CoinMine and start earning! Use my referral link: ${link}. You get 500 bonus Coins, and I get a 5% lifetime commission on your mining!`;
     WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`);
 }
-async function loadClaimSettings() {
-    const snapshot = await get(CLAIM_SETTINGS_REF);
-    claimSettings = snapshot.val() || {};
-    const btn = document.getElementById('claimBtn1');
-    const setting = claimSettings.claim1;
-    if (setting && setting.url) { btn.onclick = () => window.claimCode(btn, setting.url); }
-    else { btn.onclick = () => window.claimCode(btn, 'placeholder'); }
-    checkClaimStatus();
-}
-async function checkClaimStatus() {
-    const claimContainer = document.getElementById('claimButtonContainer');
-    const redeemedMsg = document.getElementById('redeemedMessage');
-    const claimCode = claimSettings.claim1?.code;
-    if (!claimCode) return;
-    const snapshot = await get(ref(database, `redemptions_by_user/${TELEGRAM_USER_ID}`));
-    const claimRedeemed = Object.values(snapshot.val() || {}).some(redemption => redemption.code === claimCode);
-    claimContainer.style.display = claimRedeemed ? 'none' : 'block';
-    redeemedMsg.style.display = claimRedeemed ? 'block' : 'none';
-}
-window.redeemCode = async () => {
-    let code = document.getElementById("giftCode").value.trim().toUpperCase();
-    if (code === "") { WebApp.showAlert("Please enter a gift code!"); return; }
-    try {
-        let codeData = null;
-        if (claimSettings.claim1?.code === code) codeData = claimSettings.claim1;
-        if (!codeData && claimSettings.common?.code === code) codeData = claimSettings.common;
-        if (!codeData) { WebApp.showAlert("Invalid Gift Code!"); return; }
-        const redemptionSnapshot = await get(ref(database, `redemptions_by_user/${TELEGRAM_USER_ID}`));
-        const alreadyRedeemed = Object.values(redemptionSnapshot.val() || {}).some(r => r.code === code);
-        if (alreadyRedeemed) { WebApp.showAlert("You have already redeemed this code."); return; }
-        const coinsAwarded = codeData.coins;
-        const redemptionData = { code, coins: coinsAwarded, redeemedAt: Date.now(), userId: TELEGRAM_USER_ID, userName: USER_NAME };
-        window.coins += coinsAwarded;
-        const updates = { coins: window.coins };
-        const historyRef = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
-        const historyKey = historyRef.key;
-        updates[`coin_history/${historyKey}`] = {
-            reason: 'Gift Code Redeemed', amount: coinsAwarded, timestamp: Date.now()
-        };
-        update(window.dbRef, updates);
-        push(ref(database, `redemptions_by_user/${TELEGRAM_USER_ID}`), { code, coins: coinsAwarded });
-        push(ref(database, 'redeemed_codes'), redemptionData);
-        WebApp.showPopup({message: `Code redeemed! 🎉 You won ${coinsAwarded} coins!`});
-        document.getElementById("giftCode").value = "";
-        if (code === claimSettings.claim1?.code) checkClaimStatus();
-    } catch (error) {
-        console.error("Redemption Error:", error);
-        WebApp.showAlert("Redemption failed! Please try again later.");
-    }
-}
-window.claimCode = (button, url) => {
-    if (!url || url === 'placeholder') { WebApp.showAlert("The link for this code is not available yet."); return; }
-    WebApp.openLink(url);
-}
+
 document.addEventListener('DOMContentLoaded', () => {
     loadWithdrawalLockSettings();
     loadAdminSettings();
     loadUserData();
     loadLiveTasks();
-    loadClaimSettings();
     loadWithdrawalHistory();
     listenForNotifications();
     listenForAdminPopups();
@@ -1575,35 +1539,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     document.addEventListener('visibilitychange', () => {
-        if (document.hidden) return; // Only run when app becomes visible
-            
-        // Task verification popup
-        const awaitingTaskPopup = sessionStorage.getItem('awaitingVerificationPopup');
-        if (awaitingTaskPopup) {
-            WebApp.showPopup({
-                title: 'Task in Progress',
-                message: 'Welcome back! Please wait about a minute for the "Verify Task" button to become active, then click it to get your reward.'
-            });
-            sessionStorage.removeItem('awaitingVerificationPopup');
-        }
-        
-        // *** MODIFIED: Logic for channel join confirmation ***
-        for (const key in sessionStorage) {
-            if (key.startsWith('pending_join_')) {
-                const channelId = key.replace('pending_join_', '');
-                sessionStorage.removeItem(key); // Remove the pending flag
-                sessionStorage.setItem(`confirming_join_${channelId}`, 'true'); // Set the confirmation flag
-                
+        if (!document.hidden) { 
+            const awaitingPopup = sessionStorage.getItem('awaitingVerificationPopup');
+            if (awaitingPopup) {
                 WebApp.showPopup({
-                    title: 'Confirm Subscription',
-                    message: "Welcome back! To confirm you've joined, please click the 'Join & Claim' button one more time to receive your reward.",
-                    buttons: [{ type: 'ok', text: 'Got it'}]
+                    title: 'Task in Progress',
+                    message: 'Welcome back! Please wait about a minute for the "Verify Task" button to become active, then click it to get your reward.'
                 });
-                break; // Handle one at a time
+                sessionStorage.removeItem('awaitingVerificationPopup');
             }
+            loadLiveTasks();
         }
-        
-        loadLiveTasks();
     });
     document.getElementById('customerCareLink').addEventListener('click', function(event) {
         event.preventDefault();
@@ -1620,8 +1566,33 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.showSection = (sectionId, button) => {
+  // In-App Interstitial Ad Code
+  show_9969043({
+    type: 'inApp',
+    inAppSettings: {
+      frequency: 2,
+      capping: 0.1,
+      interval: 30,
+      timeout: 5,
+      everyPage: false
+    }
+  });
+
+  // ===== START: REFERRAL DATA LOADER =====
+  if (sectionId === 'referral') {
+    // Hide tracking details when switching to the referral tab
+    const trackingDetails = document.getElementById('referral-tracking-details');
+    if (trackingDetails) trackingDetails.style.display = 'none';
+    referralDataLoaded = false; // Reset flag so it reloads on next click
+  }
+  // ===== END: REFERRAL DATA LOADER =====
+  
   document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+  
+  const mainElement = document.querySelector('main');
+  mainElement.style.display = 'flex';
   document.getElementById(sectionId).style.display = 'block';
+
   document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
   button.classList.add('active');
   updateSoundState();
