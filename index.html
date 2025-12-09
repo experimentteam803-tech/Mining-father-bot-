@@ -10,7 +10,7 @@
 <!-- MONETAG SDK SCRIPT -->
 <script src='//libtl.com/sdk.js' data-zone='9969043' data-sdk='show_9969043'></script>
 <!-- ADSGRAM SDK SCRIPT (NEW) -->
-<script src="https://cdn.adsgram.ai/js/adgram.js"></script>
+<script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 <!-- =================================================================== -->
 
 <style>
@@ -1032,10 +1032,8 @@ function processDataForStateUpdate() {
         window.dailyMinedTimestamp = 0; window.adsWatched = 0; window.adsWatchedTimestamp = 0;
     }
     // New: Check and reset reward ads
-    if (Date.now() - window.rewardAdsTimestamp >= TWELVE_HOURS_MS) {
-        if(window.rewardAdsWatched >= REWARD_ADS_REQUIRED) { // Only reset if all were watched
-            updateDatabase({ rewardAdsWatched: 0, rewardAdsTimestamp: 0 });
-        }
+    if (window.rewardAdsWatched >= REWARD_ADS_REQUIRED && Date.now() - window.rewardAdsTimestamp >= TWELVE_HOURS_MS) {
+        updateDatabase({ rewardAdsWatched: 0, rewardAdsTimestamp: 0 });
     }
     updateCoinDisplays();
     updateMiningButtonState();
@@ -1178,14 +1176,11 @@ function resumeMiningSession() {
                             timestamp: Date.now()
                         };
                         
-                        // ===== START: NEW REFERRAL TRACKING CODE =====
-                        // Update commission earned for the specific user
                         const commissionPath = `referredUsers/${TELEGRAM_USER_ID}/commissionEarned`;
                         const existingCommission = referrerData.referredUsers?.[TELEGRAM_USER_ID]?.commissionEarned || 0;
                         referrerUpdates[commissionPath] = existingCommission + accumulatedCommission;
 
                         update(referrerRef, referrerUpdates);
-                        // ===== END: NEW REFERRAL TRACKING CODE =====
                     }
                 }).catch(error => {
                     console.error("Error awarding mining commission:", error);
@@ -1247,7 +1242,6 @@ function updateMiningButtonState() {
     updateSoundState();
 }
 
-// ===== START: NEW REFERRAL DATA FUNCTION =====
 async function loadReferralData() {
     const referralTableBody = document.getElementById('referral-list-table');
     const totalReferralsEl = document.getElementById('total-referrals');
@@ -1298,9 +1292,7 @@ async function loadReferralData() {
         referralTableBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: #f44336;">Failed to load data.</td></tr>`;
     }
 }
-// ===== END: NEW REFERRAL DATA FUNCTION =====
 
-// ===== START: NEW REFERRAL TOGGLE FUNCTION =====
 window.toggleReferralTracking = () => {
     const trackingDetails = document.getElementById('referral-tracking-details');
     if (trackingDetails.style.display === 'none') {
@@ -1313,17 +1305,14 @@ window.toggleReferralTracking = () => {
         trackingDetails.style.display = 'none';
     }
 }
-// ===== END: NEW REFERRAL TOGGLE FUNCTION =====
 
-
-// ===== START: NEW FUNCTIONS FOR WATCH PAGE =====
 function updateRewardAdStatus() {
     const statusEl = document.getElementById('rewardAdStatus');
     const buttonEl = document.getElementById('watchRewardAdBtn');
     
-    if (Date.now() - window.rewardAdsTimestamp < TWELVE_HOURS_MS && window.rewardAdsWatched >= REWARD_ADS_REQUIRED) {
-        buttonEl.disabled = true;
+    if (window.rewardAdsWatched >= REWARD_ADS_REQUIRED && Date.now() - window.rewardAdsTimestamp < TWELVE_HOURS_MS) {
         const remainingTime = (window.rewardAdsTimestamp + TWELVE_HOURS_MS) - Date.now();
+        buttonEl.disabled = true;
         statusEl.innerText = `Next ads in: ${formatTime(remainingTime)}`;
         if (typeof updateRewardAdStatus.interval === 'undefined') {
             updateRewardAdStatus.interval = setInterval(updateRewardAdStatus, 1000);
@@ -1354,44 +1343,46 @@ window.watchRewardAd = () => {
     watchRewardAdBtn.innerText = '🎥 Loading Ad...';
 
     try {
-        adsgram.init({ blockId: 'int-18802' }); // Your Block ID
+        if (typeof window.Adsgram === 'undefined') {
+            throw new Error("Adsgram SDK not loaded");
+        }
+        
+        const AdController = window.Adsgram.init({ blockId: "int-18802" }); // Your Block ID
 
-        adsgram.on('close', (data) => {
-            if (data.status === 'rewarded') {
-                console.log("Ad rewarded!");
-                const newWatchedCount = window.rewardAdsWatched + 1;
-                const updates = {
-                    coins: window.coins + REWARD_AD_COINS,
-                    rewardAdsWatched: newWatchedCount,
-                    rewardAdsTimestamp: newWatchedCount >= REWARD_ADS_REQUIRED ? Date.now() : window.rewardAdsTimestamp
-                };
-                const historyRef = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
-                updates[`coin_history/${historyRef.key}`] = {
-                    reason: 'Rewarded Ad (Watch Page)', amount: REWARD_AD_COINS, timestamp: Date.now()
-                };
+        AdController.show().then((result) => {
+            console.log(result);
+            
+            const newWatchedCount = window.rewardAdsWatched + 1;
+            const updates = {
+                coins: window.coins + REWARD_AD_COINS,
+                rewardAdsWatched: newWatchedCount,
+                rewardAdsTimestamp: newWatchedCount >= REWARD_ADS_REQUIRED ? Date.now() : window.rewardAdsTimestamp
+            };
+            const historyRef = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
+            updates[`coin_history/${historyRef.key}`] = {
+                reason: 'Rewarded Ad (Watch Page)', amount: REWARD_AD_COINS, timestamp: Date.now()
+            };
 
-                update(window.dbRef, updates).then(() => {
-                    WebApp.showPopup({ message: `+${REWARD_AD_COINS} Coins for watching the ad!` });
-                    playSuccessSound();
-                }).catch(error => {
-                    console.error("Reward ad claim error:", error);
-                    WebApp.showAlert("Failed to claim reward. Please try again.");
-                });
-            } else {
-                WebApp.showAlert("You closed the ad early. No reward was given.");
-            }
+            update(window.dbRef, updates).then(() => {
+                WebApp.showPopup({ message: `+${REWARD_AD_COINS} Coins for watching the ad!` });
+                playSuccessSound();
+                window.coins += REWARD_AD_COINS;
+                window.rewardAdsWatched = newWatchedCount;
+                if(newWatchedCount >= REWARD_ADS_REQUIRED) window.rewardAdsTimestamp = Date.now();
+                updateCoinDisplays();
+                updateRewardAdStatus();
+            }).catch(error => {
+                console.error("Reward ad claim error:", error);
+                WebApp.showAlert("Failed to claim reward. Please try again.");
+            });
 
-            if ((window.rewardAdsWatched + 1) < REWARD_ADS_REQUIRED) {
+        }).catch((result) => {
+            console.log(result);
+            WebApp.showAlert("Ad was skipped or failed. No reward was given.");
+            if (window.rewardAdsWatched < REWARD_ADS_REQUIRED) {
                 watchRewardAdBtn.disabled = false;
                 watchRewardAdBtn.innerText = `📺 Watch Ad & Earn ${REWARD_AD_COINS} Coins`;
             }
-        });
-        
-        adsgram.on('error', (error) => {
-            console.error("Adsgram SDK error:", error);
-            WebApp.showAlert("Ad could not be shown. Please try again.");
-            watchRewardAdBtn.disabled = false;
-            watchRewardAdBtn.innerText = `📺 Watch Ad & Earn ${REWARD_AD_COINS} Coins`;
         });
 
     } catch (e) {
@@ -1401,7 +1392,6 @@ window.watchRewardAd = () => {
         watchRewardAdBtn.innerText = `📺 Watch Ad & Earn ${REWARD_AD_COINS} Coins`;
     }
 }
-// ===== END: NEW FUNCTIONS FOR WATCH PAGE =====
 
 
 window.showWithdrawalModal = () => {
@@ -1454,8 +1444,7 @@ window.checkWithdrawalEligibility = () => {
     const amount = Number(amountInput.value);
     const inrValueText = document.getElementById('inrValueText');
     inrValueText.style.color = 'var(--primary-glow)';
-    // UPDATED: Coin value changed to 10000
-    inrValueText.innerText = amount > 0 ? `Equivalent to ₹${(amount / 10000).toFixed(2)}` : '';
+    inrValueText.innerText = amount > 0 ? `Equivalent to ₹${(amount / 10000).toFixed(2)}` : ''; // UPDATED to 10000
     if (amount >= MIN_WITHDRAWAL_COINS && amount <= window.coins) {
         submitWithdrawalBtn.disabled = false;
     } else {
@@ -1627,14 +1616,11 @@ window.showSection = (sectionId, button) => {
     }
   });
 
-  // ===== START: REFERRAL DATA LOADER =====
   if (sectionId === 'referral') {
-    // Hide tracking details when switching to the referral tab
     const trackingDetails = document.getElementById('referral-tracking-details');
     if (trackingDetails) trackingDetails.style.display = 'none';
-    referralDataLoaded = false; // Reset flag so it reloads on next click
+    referralDataLoaded = false; 
   }
-  // ===== END: REFERRAL DATA LOADER =====
   
   document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
   
