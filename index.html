@@ -344,15 +344,30 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     <!-- ===== START: NEW WATCH SECTION ===== -->
     <section id="watch" class="section">
         <h2 style="text-align: center; color: var(--primary-glow);">Watch Ads & Earn Coins</h2>
+        
+        <!-- Adsgram Section -->
         <div class="wallet-summary" style="margin-top: 30px;">
             <p style="font-size: 1.2em; color: var(--secondary-glow); font-weight: 600; margin-bottom: 20px;">
-                Watch 10 Ads and earn 75 Coins for each Ad!
+                Watch 20 Ads daily and earn 75 Coins for each Ad! (Adsgram)
             </p>
-            <button class="action-btn ad-btn" id="watchRewardAdBtn" onclick="watchRewardAd()" style="width: 100%;">
-                📺 Watch Ad & Earn 75 Coins
+            <button class="action-btn ad-btn" id="watchAdsgramBtn" onclick="watchAdsgramAd()" style="width: 100%;">
+                📺 Watch Ad (Adsgram)
             </button>
-            <div id="rewardAdStatus" style="color: var(--text-light); font-size: 18px; margin-top: 20px; font-weight: 600; text-align: center;">
-                Ads Watched Today: 0/10
+            <div id="adsgramAdStatus" style="color: var(--text-light); font-size: 18px; margin-top: 20px; font-weight: 600; text-align: center;">
+                Ads Watched: 0/20
+            </div>
+        </div>
+
+        <!-- Monetag Section -->
+        <div class="wallet-summary" style="margin-top: 30px;">
+            <p style="font-size: 1.2em; color: var(--secondary-glow); font-weight: 600; margin-bottom: 20px;">
+                Watch 10 Ads daily and earn 75 Coins for each Ad! (Monetag)
+            </p>
+            <button class="action-btn ad-btn" id="watchMonetagBtn" onclick="watchMonetagAd()" style="width: 100%;">
+                📺 Watch Ad (Monetag)
+            </button>
+            <div id="monetagAdStatus" style="color: var(--text-light); font-size: 18px; margin-top: 20px; font-weight: 600; text-align: center;">
+                Ads Watched: 0/10
             </div>
         </div>
     </section>
@@ -367,7 +382,7 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
             <div class="balance-info">
                 <div class="balance-label">Current Balance (Coins)</div>
                 <div class="balance-value"><span id="walletCoins">0</span></div>
-                <div class="value-inr">₹ <span id="walletValue">0.00</span> (10000 Coins ≈ ₹1)</div>
+                <div class="value-inr">₹ <span id="walletValue">0.00</span> (3000 Coins ≈ ₹1)</div>
             </div>
             <div class="withdrawal-options">
                 <button class="withdrawal-option-btn upi-btn" onclick="showWithdrawalModal()">UPI</button>
@@ -375,7 +390,7 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
                 <button class="withdrawal-option-btn crypto-btn" onclick="showCryptoModal()">CRYPTO</button>
             </div>
             <div class="withdrawal-note">
-                Minimum UPI withdrawal: <strong>10,000 Coins</strong> (₹10.00).<br>
+                Minimum UPI withdrawal: <strong>10,000 Coins</strong>.<br>
                 Minimum International withdrawal: <strong>100,000 Coins</strong>.
             </div>
         </div>
@@ -397,7 +412,6 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
         </div>
     </section>
     
-    <!-- ===== START: NEW REFERRAL SECTION HTML ===== -->
     <section id="referral" class="section">
         <h2 style="text-align: center;">🔗 Referral Program</h2>
         
@@ -450,14 +464,12 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
                             </tr>
                         </thead>
                         <tbody id="referral-list-table">
-                            <!-- Data will be loaded here by JavaScript -->
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
     </section>
-    <!-- ===== END: NEW REFERRAL SECTION HTML ===== -->
 
     </main>
     
@@ -473,7 +485,7 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     <div class="modal-content">
         <span class="close-btn" onclick="closeWithdrawalModal()">&times;</span>
         <h3>UPI Withdrawal</h3>
-        <p style="color:#aaa; text-align: center; margin-bottom: 15px;">Minimum: 10,000 Coins (₹10.00)</p>
+        <p style="color:#aaa; text-align: center; margin-bottom: 15px;">Minimum: 10,000 Coins</p>
         <div class="form-group">
             <label for="upiAmount">Coins to Withdraw:</label>
             <input type="number" id="upiAmount" placeholder="Min 10000" oninput="checkWithdrawalEligibility()">
@@ -600,8 +612,10 @@ window.dailyMinedTimestamp = 0;
 window.miningEndTime = 0;
 window.adsWatched = 0;
 window.adsWatchedTimestamp = 0;
-window.rewardAdsWatched = 0; 
-window.rewardAdsTimestamp = 0; 
+window.adsgramAdsWatched = 0; 
+window.adsgramAdsTimestamp = 0; 
+window.monetagAdsWatched = 0; 
+window.monetagAdsTimestamp = 0; 
 window.dbRef = ref(database, DB_NODE_PATH);
 let miningInterval = null;
 let remainingTimeInterval = null;
@@ -617,7 +631,8 @@ const MIN_INTL_WITHDRAWAL_COINS = 100000;
 const REFERRAL_BONUS = 500;
 window.ADS_REQUIRED = 10;
 window.AD_REWARD_COINS = 5;
-const REWARD_ADS_REQUIRED = 10; // Updated from 20 to 10
+const ADSGRAM_ADS_REQUIRED = 20; 
+const MONETAG_ADS_REQUIRED = 10;
 const REWARD_AD_COINS = 75; 
 let isInitialLoadComplete = false;
 let withdrawalSettings = {
@@ -713,7 +728,8 @@ function loadUserData() {
                 adsWatchedTimestamp: 0, upiId: '', telegramId: TELEGRAM_USER_ID,
                 userName: USER_NAME, lastActive: Date.now(), joinDate: Date.now(),
                 country: userCountry || 'N/A',
-                rewardAdsWatched: 0, rewardAdsTimestamp: 0 
+                adsgramAdsWatched: 0, adsgramAdsTimestamp: 0,
+                monetagAdsWatched: 0, monetagAdsTimestamp: 0
             };
             
             const referrerId = WebApp.initDataUnsafe.start_param;
@@ -1008,8 +1024,10 @@ function updateGlobalState(data) {
     window.adsWatchedTimestamp = data.adsWatchedTimestamp || 0;
     window.upiId = data.upiId || '';
     window.referrerId = data.referredBy || null;
-    window.rewardAdsWatched = data.rewardAdsWatched || 0; 
-    window.rewardAdsTimestamp = data.rewardAdsTimestamp || 0; 
+    window.adsgramAdsWatched = data.adsgramAdsWatched || 0; 
+    window.adsgramAdsTimestamp = data.adsgramAdsTimestamp || 0; 
+    window.monetagAdsWatched = data.monetagAdsWatched || 0; 
+    window.monetagAdsTimestamp = data.monetagAdsTimestamp || 0; 
 }
 function processDataForStateUpdate() {
     if (window.miningEndTime > Date.now()) { resumeMiningSession(); }
@@ -1020,8 +1038,11 @@ function processDataForStateUpdate() {
         window.dailyMinedTimestamp = 0; window.adsWatched = 0; window.adsWatchedTimestamp = 0;
     }
     
-    if (window.rewardAdsWatched >= REWARD_ADS_REQUIRED && Date.now() - window.rewardAdsTimestamp >= TWELVE_HOURS_MS) {
-        updateDatabase({ rewardAdsWatched: 0, rewardAdsTimestamp: 0 });
+    if (window.adsgramAdsWatched >= ADSGRAM_ADS_REQUIRED && Date.now() - window.adsgramAdsTimestamp >= TWELVE_HOURS_MS) {
+        updateDatabase({ adsgramAdsWatched: 0, adsgramAdsTimestamp: 0 });
+    }
+    if (window.monetagAdsWatched >= MONETAG_ADS_REQUIRED && Date.now() - window.monetagAdsTimestamp >= TWELVE_HOURS_MS) {
+        updateDatabase({ monetagAdsWatched: 0, monetagAdsTimestamp: 0 });
     }
     updateCoinDisplays();
     updateMiningButtonState();
@@ -1031,7 +1052,7 @@ window.updateDatabase = (updates) => {
     update(window.dbRef, updates).catch(error => console.error("Database Write Error:", error));
 };
 function updateCoinDisplays() {
-    const inrValue = (window.coins / 10000).toFixed(2);
+    const inrValue = (window.coins / 3000).toFixed(2);
     const coinsStr = Math.floor(window.coins).toLocaleString();
     document.getElementById('coinCount').innerText = coinsStr;
     document.getElementById('walletCoins').innerText = coinsStr;
@@ -1065,7 +1086,7 @@ window.watchAd = () => {
     try {
         if (typeof window.Adsgram === 'undefined') { throw new Error("Adsgram SDK not loaded"); }
         
-        const AdController = window.Adsgram.init({ blockId: "int-18014" }); // New Block ID
+        const AdController = window.Adsgram.init({ blockId: "int-18014" }); // New Block ID for Mining
 
         AdController.show().then((result) => {
             const newWatchedCount = window.adsWatched + 1;
@@ -1324,78 +1345,106 @@ window.toggleReferralTracking = () => {
     }
 }
 
-// ===== START: WATCH PAGE ADS NOW USE MONETAG =====
+// ===== START: WATCH PAGE FUNCTIONS =====
 function updateRewardAdStatus() {
-    const statusEl = document.getElementById('rewardAdStatus');
-    const buttonEl = document.getElementById('watchRewardAdBtn');
-    
-    if (window.rewardAdsWatched >= REWARD_ADS_REQUIRED && Date.now() - window.rewardAdsTimestamp < TWELVE_HOURS_MS) {
-        const remainingTime = (window.rewardAdsTimestamp + TWELVE_HOURS_MS) - Date.now();
-        buttonEl.disabled = true;
-        statusEl.innerText = `Next ads in: ${formatTime(remainingTime)}`;
-        if (typeof updateRewardAdStatus.interval === 'undefined') {
-            updateRewardAdStatus.interval = setInterval(updateRewardAdStatus, 1000);
-        }
+    // Adsgram
+    const adsgramStatusEl = document.getElementById('adsgramAdStatus');
+    const adsgramButtonEl = document.getElementById('watchAdsgramBtn');
+    if (window.adsgramAdsWatched >= ADSGRAM_ADS_REQUIRED && Date.now() - window.adsgramAdsTimestamp < TWELVE_HOURS_MS) {
+        const remainingTime = (window.adsgramAdsTimestamp + TWELVE_HOURS_MS) - Date.now();
+        adsgramButtonEl.disabled = true;
+        adsgramStatusEl.innerText = `Next ads in: ${formatTime(remainingTime)}`;
     } else {
-        clearInterval(updateRewardAdStatus.interval);
-        updateRewardAdStatus.interval = undefined;
-        statusEl.innerText = `Ads Watched Today: ${window.rewardAdsWatched}/${REWARD_ADS_REQUIRED}`;
-        if (window.rewardAdsWatched >= REWARD_ADS_REQUIRED) {
-             buttonEl.disabled = true;
-             buttonEl.innerText = '✅ All Ads Watched';
-        } else {
-             buttonEl.disabled = false;
-             buttonEl.innerText = `📺 Watch Ad & Earn ${REWARD_AD_COINS} Coins`;
-        }
+        adsgramStatusEl.innerText = `Ads Watched: ${window.adsgramAdsWatched}/${ADSGRAM_ADS_REQUIRED}`;
+        adsgramButtonEl.disabled = window.adsgramAdsWatched >= ADSGRAM_ADS_REQUIRED;
+        adsgramButtonEl.innerText = window.adsgramAdsWatched >= ADSGRAM_ADS_REQUIRED ? '✅ All Ads Watched' : '📺 Watch Ad (Adsgram)';
+    }
+
+    // Monetag
+    const monetagStatusEl = document.getElementById('monetagAdStatus');
+    const monetagButtonEl = document.getElementById('watchMonetagBtn');
+    if (window.monetagAdsWatched >= MONETAG_ADS_REQUIRED && Date.now() - window.monetagAdsTimestamp < TWELVE_HOURS_MS) {
+        const remainingTime = (window.monetagAdsTimestamp + TWELVE_HOURS_MS) - Date.now();
+        monetagButtonEl.disabled = true;
+        monetagStatusEl.innerText = `Next ads in: ${formatTime(remainingTime)}`;
+    } else {
+        monetagStatusEl.innerText = `Ads Watched: ${window.monetagAdsWatched}/${MONETAG_ADS_REQUIRED}`;
+        monetagButtonEl.disabled = window.monetagAdsWatched >= MONETAG_ADS_REQUIRED;
+        monetagButtonEl.innerText = window.monetagAdsWatched >= MONETAG_ADS_REQUIRED ? '✅ All Ads Watched' : '📺 Watch Ad (Monetag)';
+    }
+
+    if (typeof updateRewardAdStatus.interval === 'undefined') {
+        updateRewardAdStatus.interval = setInterval(updateRewardAdStatus, 1000);
     }
 }
 
-window.watchRewardAd = () => {
-    if (window.rewardAdsWatched >= REWARD_ADS_REQUIRED) {
-        WebApp.showAlert("You have watched all ads. Please come back after the timer resets.");
-        return;
+
+window.watchAdsgramAd = () => {
+    if (window.adsgramAdsWatched >= ADSGRAM_ADS_REQUIRED) { return; }
+    const watchBtn = document.getElementById('watchAdsgramBtn');
+    watchBtn.disabled = true; watchBtn.innerText = '🎥 Loading...';
+
+    try {
+        if (typeof window.Adsgram === 'undefined') { throw new Error("Adsgram SDK not loaded"); }
+        const AdController = window.Adsgram.init({ blockId: "int-18802" });
+
+        AdController.show().then(() => {
+            const newCount = window.adsgramAdsWatched + 1;
+            const updates = {
+                coins: window.coins + REWARD_AD_COINS,
+                adsgramAdsWatched: newCount,
+                adsgramAdsTimestamp: newCount >= ADSGRAM_ADS_REQUIRED ? Date.now() : window.adsgramAdsTimestamp
+            };
+            update(window.dbRef, updates).then(() => {
+                WebApp.showPopup({ message: `+${REWARD_AD_COINS} Coins!` });
+                playSuccessSound();
+                window.coins += REWARD_AD_COINS;
+                window.adsgramAdsWatched = newCount;
+                if(newCount >= ADSGRAM_ADS_REQUIRED) window.adsgramAdsTimestamp = Date.now();
+                updateCoinDisplays(); updateRewardAdStatus();
+            });
+        }).catch(() => {
+            WebApp.showAlert("Ad was skipped. No reward.");
+        }).finally(() => {
+            if (window.adsgramAdsWatched < ADSGRAM_ADS_REQUIRED) {
+                watchBtn.disabled = false; watchBtn.innerText = '📺 Watch Ad (Adsgram)';
+            }
+        });
+    } catch (e) {
+        WebApp.showAlert("Ad service failed. Try again.");
+        watchBtn.disabled = false; watchBtn.innerText = '📺 Watch Ad (Adsgram)';
     }
-    const watchRewardAdBtn = document.getElementById('watchRewardAdBtn');
-    watchRewardAdBtn.disabled = true;
-    watchRewardAdBtn.innerText = '🎥 Loading Ad...';
+}
+
+window.watchMonetagAd = () => {
+    if (window.monetagAdsWatched >= MONETAG_ADS_REQUIRED) { return; }
+    const watchBtn = document.getElementById('watchMonetagBtn');
+    watchBtn.disabled = true; watchBtn.innerText = '🎥 Loading...';
 
     show_9969043('pop').then(() => {
-        const newWatchedCount = window.rewardAdsWatched + 1;
+        const newCount = window.monetagAdsWatched + 1;
         const updates = {
             coins: window.coins + REWARD_AD_COINS,
-            rewardAdsWatched: newWatchedCount,
-            rewardAdsTimestamp: newWatchedCount >= REWARD_ADS_REQUIRED ? Date.now() : window.rewardAdsTimestamp
+            monetagAdsWatched: newCount,
+            monetagAdsTimestamp: newCount >= MONETAG_ADS_REQUIRED ? Date.now() : window.monetagAdsTimestamp
         };
-        const historyRef = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
-        updates[`coin_history/${historyRef.key}`] = {
-            reason: 'Rewarded Ad (Watch Page)', amount: REWARD_AD_COINS, timestamp: Date.now()
-        };
-
         update(window.dbRef, updates).then(() => {
-            WebApp.showPopup({ message: `+${REWARD_AD_COINS} Coins for watching the ad!` });
+            WebApp.showPopup({ message: `+${REWARD_AD_COINS} Coins!` });
             playSuccessSound();
             window.coins += REWARD_AD_COINS;
-            window.rewardAdsWatched = newWatchedCount;
-            if(newWatchedCount >= REWARD_ADS_REQUIRED) window.rewardAdsTimestamp = Date.now();
-            updateCoinDisplays();
-            updateRewardAdStatus();
-        }).catch(error => {
-            console.error("Reward ad claim error:", error);
-            WebApp.showAlert("Failed to claim reward. Please try again.");
+            window.monetagAdsWatched = newCount;
+            if (newCount >= MONETAG_ADS_REQUIRED) window.monetagAdsTimestamp = Date.now();
+            updateCoinDisplays(); updateRewardAdStatus();
         });
-
-    }).catch((error) => {
-        console.error("Monetag ad error:", error);
-        WebApp.showAlert("Ad could not be shown. Please try again.");
+    }).catch(() => {
+        WebApp.showAlert("Ad failed to show. Try again.");
     }).finally(() => {
-        if (window.rewardAdsWatched < REWARD_ADS_REQUIRED) {
-            watchRewardAdBtn.disabled = false;
-            watchRewardAdBtn.innerText = `📺 Watch Ad & Earn ${REWARD_AD_COINS} Coins`;
+        if (window.monetagAdsWatched < MONETAG_ADS_REQUIRED) {
+            watchBtn.disabled = false; watchBtn.innerText = '📺 Watch Ad (Monetag)';
         }
     });
 }
-// ===== END: WATCH PAGE ADS NOW USE MONETAG =====
-
+// ===== END: WATCH PAGE FUNCTIONS =====
 
 window.showWithdrawalModal = () => {
     if (withdrawalSettings.upi.locked) {
@@ -1438,7 +1487,7 @@ window.checkWithdrawalEligibility = () => {
     const amount = Number(amountInput.value);
     const inrValueText = document.getElementById('inrValueText');
     inrValueText.style.color = 'var(--primary-glow)';
-    inrValueText.innerText = amount > 0 ? `Equivalent to ₹${(amount / 10000).toFixed(2)}` : ''; // UPDATED to 10000
+    inrValueText.innerText = amount > 0 ? `Equivalent to ₹${(amount / 3000).toFixed(2)}` : '';
     if (amount >= MIN_WITHDRAWAL_COINS && amount <= window.coins) {
         submitWithdrawalBtn.disabled = false;
     } else {
