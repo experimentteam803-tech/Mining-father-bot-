@@ -7,9 +7,8 @@
 <title>CoinMine App - Telegram Mini App</title>
 
 <!-- =================================================================== -->
-<!-- MONETAG SDK SCRIPT -->
+<!-- BOTH SDKs ARE NOW INCLUDED -->
 <script src='//libtl.com/sdk.js' data-zone='9969043' data-sdk='show_9969043'></script>
-<!-- ADSGRAM SDK SCRIPT (NEW) -->
 <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 <!-- =================================================================== -->
 
@@ -347,13 +346,13 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
         <h2 style="text-align: center; color: var(--primary-glow);">Watch Ads & Earn Coins</h2>
         <div class="wallet-summary" style="margin-top: 30px;">
             <p style="font-size: 1.2em; color: var(--secondary-glow); font-weight: 600; margin-bottom: 20px;">
-                Watch 20 Ads daily and earn 75 Coins for each Ad!
+                Watch 10 Ads and earn 75 Coins for each Ad!
             </p>
             <button class="action-btn ad-btn" id="watchRewardAdBtn" onclick="watchRewardAd()" style="width: 100%;">
                 📺 Watch Ad & Earn 75 Coins
             </button>
             <div id="rewardAdStatus" style="color: var(--text-light); font-size: 18px; margin-top: 20px; font-weight: 600; text-align: center;">
-                Ads Watched Today: 0/20
+                Ads Watched Today: 0/10
             </div>
         </div>
     </section>
@@ -558,14 +557,12 @@ let telegramUser = null;
 try {
     telegramUser = WebApp.initDataUnsafe.user;
     if (!telegramUser || !telegramUser.id) {
-        // If user data is not found, stop the app and inform the user.
         WebApp.showAlert("Could not verify your Telegram account. Please try restarting the app through Telegram.", () => WebApp.close());
         throw new Error("Missing Telegram User ID");
     }
 } catch (error) {
     console.error("Critical Error: Could not get Telegram user data.", error);
     WebApp.showAlert("A critical error occurred while loading your profile. Please restart the app.", () => WebApp.close());
-    // Stop further script execution
     throw new Error("App halted due to missing user data.");
 }
 
@@ -603,8 +600,8 @@ window.dailyMinedTimestamp = 0;
 window.miningEndTime = 0;
 window.adsWatched = 0;
 window.adsWatchedTimestamp = 0;
-window.rewardAdsWatched = 0; // New: For Watch page ads
-window.rewardAdsTimestamp = 0; // New: For Watch page ads reset
+window.rewardAdsWatched = 0; 
+window.rewardAdsTimestamp = 0; 
 window.dbRef = ref(database, DB_NODE_PATH);
 let miningInterval = null;
 let remainingTimeInterval = null;
@@ -614,14 +611,14 @@ const MINING_RATE_MS = 450;
 const INTL_COINS_PER_INCREMENT = 0.125; 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
-const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000; // New Timer
+const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000; 
 const MIN_WITHDRAWAL_COINS = 10000;
 const MIN_INTL_WITHDRAWAL_COINS = 100000;
 const REFERRAL_BONUS = 500;
 window.ADS_REQUIRED = 10;
 window.AD_REWARD_COINS = 5;
-const REWARD_ADS_REQUIRED = 20; // New
-const REWARD_AD_COINS = 75; // New
+const REWARD_ADS_REQUIRED = 10; // Updated from 20 to 10
+const REWARD_AD_COINS = 75; 
 let isInitialLoadComplete = false;
 let withdrawalSettings = {
     upi: { locked: false, message: '' },
@@ -633,7 +630,7 @@ let withdrawalSettings = {
 window.referrerId = null; 
 let commissionToAward = 0; 
 const COMMISSION_RATE = 0.05;
-let referralDataLoaded = false; // Flag to check if referral data is loaded
+let referralDataLoaded = false; 
 
 // DOM Elements
 const mineButton = document.getElementById('mineBtn');
@@ -656,10 +653,8 @@ const miningSound = document.getElementById('miningSound');
 const clickSound = document.getElementById('clickSound');
 const successSound = document.getElementById('successSound');
 
-// Audio Elements
 let hasInteracted = false;
 
-// --- AUDIO FUNCTIONS ---
 function primeAudio() {
     if (hasInteracted) return;
     hasInteracted = true;
@@ -688,7 +683,6 @@ function updateSoundState() {
     }
 }
 
-// --- DATA HANDLING FUNCTIONS ---
 async function getUserCountry() {
     const storedCountry = localStorage.getItem('userCountryCode');
     if (storedCountry) return storedCountry;
@@ -712,7 +706,6 @@ function loadUserData() {
     onValue(window.dbRef, async (snapshot) => {
         let data = snapshot.val();
         if (!data) {
-            // This is a new user, create their profile
             console.log("New user detected. Creating profile...");
             const userCountry = await getUserCountry();
             const initialData = {
@@ -720,10 +713,9 @@ function loadUserData() {
                 adsWatchedTimestamp: 0, upiId: '', telegramId: TELEGRAM_USER_ID,
                 userName: USER_NAME, lastActive: Date.now(), joinDate: Date.now(),
                 country: userCountry || 'N/A',
-                rewardAdsWatched: 0, rewardAdsTimestamp: 0 // New fields for new users
+                rewardAdsWatched: 0, rewardAdsTimestamp: 0 
             };
             
-            // Handle referral
             const referrerId = WebApp.initDataUnsafe.start_param;
             if (referrerId && referrerId !== TELEGRAM_USER_ID) {
                 initialData.referredBy = referrerId;
@@ -742,11 +734,10 @@ function loadUserData() {
                 }).catch(error => console.error("Error awarding referral bonus:", error));
             }
 
-            // Set the new user data in Firebase with error handling
             try {
                 await set(window.dbRef, initialData);
                 console.log("User profile created successfully in Firebase.");
-                updateGlobalState(initialData); // Update UI immediately
+                updateGlobalState(initialData); 
             } catch (error) {
                 console.error("Firebase Write Error (User Creation):", error);
                 WebApp.showAlert("Failed to create your profile. Please check your internet connection and restart the app. Error: " + error.message);
@@ -754,7 +745,6 @@ function loadUserData() {
             return;
         }
         
-        // This is an existing user, update their data
         if (data.country && data.country !== 'IN') COINS_PER_INCREMENT = INTL_COINS_PER_INCREMENT;
         else COINS_PER_INCREMENT = 0.1;
         
@@ -762,7 +752,6 @@ function loadUserData() {
         const fetchedCountry = await getUserCountry();
         if (fetchedCountry && data.country !== fetchedCountry) updates.country = fetchedCountry;
 
-        // ===== START: COIN DISAPPEARING FIX =====
         if (!isInitialLoadComplete) {
             isInitialLoadComplete = true; 
             const lastSeen = data.lastActive || 0;
@@ -802,7 +791,6 @@ function loadUserData() {
         }
 
         processDataForStateUpdate();
-        // ===== END: COIN DISAPPEARING FIX =====
 
     }, (error) => {
         console.error("Firebase Read Error (User Data):", error);
@@ -1020,8 +1008,8 @@ function updateGlobalState(data) {
     window.adsWatchedTimestamp = data.adsWatchedTimestamp || 0;
     window.upiId = data.upiId || '';
     window.referrerId = data.referredBy || null;
-    window.rewardAdsWatched = data.rewardAdsWatched || 0; // New
-    window.rewardAdsTimestamp = data.rewardAdsTimestamp || 0; // New
+    window.rewardAdsWatched = data.rewardAdsWatched || 0; 
+    window.rewardAdsTimestamp = data.rewardAdsTimestamp || 0; 
 }
 function processDataForStateUpdate() {
     if (window.miningEndTime > Date.now()) { resumeMiningSession(); }
@@ -1031,19 +1019,18 @@ function processDataForStateUpdate() {
         updateDatabase(updates);
         window.dailyMinedTimestamp = 0; window.adsWatched = 0; window.adsWatchedTimestamp = 0;
     }
-    // New: Check and reset reward ads
+    
     if (window.rewardAdsWatched >= REWARD_ADS_REQUIRED && Date.now() - window.rewardAdsTimestamp >= TWELVE_HOURS_MS) {
         updateDatabase({ rewardAdsWatched: 0, rewardAdsTimestamp: 0 });
     }
     updateCoinDisplays();
     updateMiningButtonState();
-    updateRewardAdStatus(); // New
+    updateRewardAdStatus(); 
 }
 window.updateDatabase = (updates) => {
     update(window.dbRef, updates).catch(error => console.error("Database Write Error:", error));
 };
 function updateCoinDisplays() {
-    // UPDATED: Coin value changed to 10000
     const inrValue = (window.coins / 10000).toFixed(2);
     const coinsStr = Math.floor(window.coins).toLocaleString();
     document.getElementById('coinCount').innerText = coinsStr;
@@ -1058,6 +1045,8 @@ function formatTime(ms) {
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 window.canMineAgain = () => { return (Date.now() - window.dailyMinedTimestamp) >= TWO_HOURS_MS; }
+
+// ===== START: MINING ADS NOW USE ADSGRAM =====
 window.watchAd = () => {
     const miningStillActive = window.miningEndTime > Date.now();
     const isInCooldown = !window.canMineAgain() && window.dailyMinedTimestamp !== 0;
@@ -1069,29 +1058,58 @@ window.watchAd = () => {
         WebApp.showAlert("Cannot watch ads while mining or in cooldown.");
         return;
     }
-    watchAdBtn.disabled = true; watchAdBtn.innerText = '🎥 Loading Ad...';
-    show_9969043('pop').then(() => {
-        window.adsWatched++;
-        window.coins += window.AD_REWARD_COINS;
-        const updates = { coins: window.coins, adsWatched: window.adsWatched, adsWatchedTimestamp: Date.now() };
-        const historyRef = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
-        updates[`coin_history/${historyRef.key}`] = {
-            reason: 'Ad Reward', amount: window.AD_REWARD_COINS, timestamp: Date.now()
-        };
-        update(window.dbRef, updates);
-        if (window.adsWatched < window.ADS_REQUIRED) {
-            watchAdBtn.disabled = false; watchAdBtn.innerText = '🎬 Watch Ad';
-            WebApp.showPopup({message: `+${window.AD_REWARD_COINS} Coins! ${window.ADS_REQUIRED - window.adsWatched} more ads needed.`});
-        } else {
-            watchAdBtn.innerText = '✅ Ads Complete';
-            WebApp.showPopup({message: `Congratulations! You can now start mining!`});
-        }
-    }).catch((error) => {
-        console.error("Monetag ad error:", error);
-        WebApp.showAlert("Ad could not be shown. Please try again.");
-        watchAdBtn.disabled = false; watchAdBtn.innerText = '🎬 Watch Ad';
-    });
+    const watchAdBtn = document.getElementById('watchAdBtn');
+    watchAdBtn.disabled = true;
+    watchAdBtn.innerText = '🎥 Loading Ad...';
+
+    try {
+        if (typeof window.Adsgram === 'undefined') { throw new Error("Adsgram SDK not loaded"); }
+        
+        const AdController = window.Adsgram.init({ blockId: "int-18014" }); // New Block ID
+
+        AdController.show().then((result) => {
+            const newWatchedCount = window.adsWatched + 1;
+            const updates = {
+                coins: window.coins + window.AD_REWARD_COINS,
+                adsWatched: newWatchedCount,
+                adsWatchedTimestamp: Date.now()
+            };
+            const historyRef = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
+            updates[`coin_history/${historyRef.key}`] = {
+                reason: 'Ad Reward (Mining)', amount: window.AD_REWARD_COINS, timestamp: Date.now()
+            };
+
+            update(window.dbRef, updates).then(() => {
+                window.coins += window.AD_REWARD_COINS;
+                window.adsWatched = newWatchedCount;
+                updateCoinDisplays();
+                updateAdStatus();
+
+                if (newWatchedCount < window.ADS_REQUIRED) {
+                    WebApp.showPopup({ message: `+${window.AD_REWARD_COINS} Coins! ${window.ADS_REQUIRED - newWatchedCount} more ads needed.` });
+                } else {
+                    WebApp.showPopup({ message: `Congratulations! You can now start mining!` });
+                }
+                playSuccessSound();
+            });
+        }).catch((result) => {
+            WebApp.showAlert("Ad was skipped or failed. No reward was given.");
+        }).finally(() => {
+             if (window.adsWatched < window.ADS_REQUIRED) {
+                watchAdBtn.disabled = false;
+                watchAdBtn.innerText = '🎬 Watch Ad';
+            }
+        });
+
+    } catch (e) {
+        console.error("Adsgram initialization failed:", e);
+        WebApp.showAlert("Ad service failed to load. Please try again later.");
+        watchAdBtn.disabled = false;
+        watchAdBtn.innerText = '🎬 Watch Ad';
+    }
 }
+// ===== END: MINING ADS NOW USE ADSGRAM =====
+
 function updateAdStatus() {
     const isInCooldown = !window.canMineAgain() && window.dailyMinedTimestamp !== 0;
     if (window.adsWatched >= window.ADS_REQUIRED) {
@@ -1267,7 +1285,7 @@ async function loadReferralData() {
             return;
         }
         
-        referralTableBody.innerHTML = ''; // Clear loading message
+        referralTableBody.innerHTML = ''; 
         let totalCommission = 0;
 
         userIds.forEach(userId => {
@@ -1297,7 +1315,7 @@ window.toggleReferralTracking = () => {
     const trackingDetails = document.getElementById('referral-tracking-details');
     if (trackingDetails.style.display === 'none') {
         trackingDetails.style.display = 'block';
-        if (!referralDataLoaded) { // Only load data on the first click
+        if (!referralDataLoaded) { 
             loadReferralData();
             referralDataLoaded = true;
         }
@@ -1306,6 +1324,7 @@ window.toggleReferralTracking = () => {
     }
 }
 
+// ===== START: WATCH PAGE ADS NOW USE MONETAG =====
 function updateRewardAdStatus() {
     const statusEl = document.getElementById('rewardAdStatus');
     const buttonEl = document.getElementById('watchRewardAdBtn');
@@ -1331,75 +1350,56 @@ function updateRewardAdStatus() {
     }
 }
 
-
 window.watchRewardAd = () => {
     if (window.rewardAdsWatched >= REWARD_ADS_REQUIRED) {
         WebApp.showAlert("You have watched all ads. Please come back after the timer resets.");
         return;
     }
-
     const watchRewardAdBtn = document.getElementById('watchRewardAdBtn');
     watchRewardAdBtn.disabled = true;
     watchRewardAdBtn.innerText = '🎥 Loading Ad...';
 
-    try {
-        if (typeof window.Adsgram === 'undefined') {
-            throw new Error("Adsgram SDK not loaded");
-        }
-        
-        const AdController = window.Adsgram.init({ blockId: "int-18802" }); // Your Block ID
+    show_9969043('pop').then(() => {
+        const newWatchedCount = window.rewardAdsWatched + 1;
+        const updates = {
+            coins: window.coins + REWARD_AD_COINS,
+            rewardAdsWatched: newWatchedCount,
+            rewardAdsTimestamp: newWatchedCount >= REWARD_ADS_REQUIRED ? Date.now() : window.rewardAdsTimestamp
+        };
+        const historyRef = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
+        updates[`coin_history/${historyRef.key}`] = {
+            reason: 'Rewarded Ad (Watch Page)', amount: REWARD_AD_COINS, timestamp: Date.now()
+        };
 
-        AdController.show().then((result) => {
-            console.log(result);
-            
-            const newWatchedCount = window.rewardAdsWatched + 1;
-            const updates = {
-                coins: window.coins + REWARD_AD_COINS,
-                rewardAdsWatched: newWatchedCount,
-                rewardAdsTimestamp: newWatchedCount >= REWARD_ADS_REQUIRED ? Date.now() : window.rewardAdsTimestamp
-            };
-            const historyRef = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
-            updates[`coin_history/${historyRef.key}`] = {
-                reason: 'Rewarded Ad (Watch Page)', amount: REWARD_AD_COINS, timestamp: Date.now()
-            };
-
-            update(window.dbRef, updates).then(() => {
-                WebApp.showPopup({ message: `+${REWARD_AD_COINS} Coins for watching the ad!` });
-                playSuccessSound();
-                window.coins += REWARD_AD_COINS;
-                window.rewardAdsWatched = newWatchedCount;
-                if(newWatchedCount >= REWARD_ADS_REQUIRED) window.rewardAdsTimestamp = Date.now();
-                updateCoinDisplays();
-                updateRewardAdStatus();
-            }).catch(error => {
-                console.error("Reward ad claim error:", error);
-                WebApp.showAlert("Failed to claim reward. Please try again.");
-            });
-
-        }).catch((result) => {
-            console.log(result);
-            WebApp.showAlert("Ad was skipped or failed. No reward was given.");
-            if (window.rewardAdsWatched < REWARD_ADS_REQUIRED) {
-                watchRewardAdBtn.disabled = false;
-                watchRewardAdBtn.innerText = `📺 Watch Ad & Earn ${REWARD_AD_COINS} Coins`;
-            }
+        update(window.dbRef, updates).then(() => {
+            WebApp.showPopup({ message: `+${REWARD_AD_COINS} Coins for watching the ad!` });
+            playSuccessSound();
+            window.coins += REWARD_AD_COINS;
+            window.rewardAdsWatched = newWatchedCount;
+            if(newWatchedCount >= REWARD_ADS_REQUIRED) window.rewardAdsTimestamp = Date.now();
+            updateCoinDisplays();
+            updateRewardAdStatus();
+        }).catch(error => {
+            console.error("Reward ad claim error:", error);
+            WebApp.showAlert("Failed to claim reward. Please try again.");
         });
 
-    } catch (e) {
-        console.error("Adsgram initialization failed:", e);
-        WebApp.showAlert("Ad service failed to load. Please try again later.");
-        watchRewardAdBtn.disabled = false;
-        watchRewardAdBtn.innerText = `📺 Watch Ad & Earn ${REWARD_AD_COINS} Coins`;
-    }
+    }).catch((error) => {
+        console.error("Monetag ad error:", error);
+        WebApp.showAlert("Ad could not be shown. Please try again.");
+    }).finally(() => {
+        if (window.rewardAdsWatched < REWARD_ADS_REQUIRED) {
+            watchRewardAdBtn.disabled = false;
+            watchRewardAdBtn.innerText = `📺 Watch Ad & Earn ${REWARD_AD_COINS} Coins`;
+        }
+    });
 }
+// ===== END: WATCH PAGE ADS NOW USE MONETAG =====
 
 
 window.showWithdrawalModal = () => {
     if (withdrawalSettings.upi.locked) {
-        WebApp.showPopup({
-            title: 'UPI Unavailable',
-            message: withdrawalSettings.upi.message || 'UPI withdrawals are temporarily disabled.'
-        });
+        WebApp.showPopup({ title: 'UPI Unavailable', message: withdrawalSettings.upi.message || 'UPI withdrawals are temporarily disabled.' });
         return;
     }
     withdrawalModal.style.display = "block";
@@ -1410,10 +1410,7 @@ window.showWithdrawalModal = () => {
 }
 window.showPaypalModal = () => {
     if (withdrawalSettings.paypal.locked) {
-        WebApp.showPopup({
-            title: 'PayPal Unavailable',
-            message: withdrawalSettings.paypal.message || 'PayPal withdrawals are temporarily disabled.'
-        });
+        WebApp.showPopup({ title: 'PayPal Unavailable', message: withdrawalSettings.paypal.message || 'PayPal withdrawals are temporarily disabled.' });
         return;
     }
     paypalModal.style.display = "block";
@@ -1423,10 +1420,7 @@ window.showPaypalModal = () => {
 }
 window.showCryptoModal = () => {
     if (withdrawalSettings.crypto.locked) {
-        WebApp.showPopup({
-            title: 'Crypto Unavailable',
-            message: withdrawalSettings.crypto.message || 'Crypto withdrawals are temporarily disabled.'
-        });
+        WebApp.showPopup({ title: 'Crypto Unavailable', message: withdrawalSettings.crypto.message || 'Crypto withdrawals are temporarily disabled.' });
         return;
     }
     cryptoModal.style.display = "block";
