@@ -435,7 +435,6 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
         </button>
 
         <div id="referral-tracking-details" style="display: none;">
-            <!-- Referral Summary -->
             <div class="wallet-summary" style="margin-top: 25px; padding: 15px;">
                  <div style="display: flex; justify-content: space-around; text-align: center;">
                     <div>
@@ -449,7 +448,6 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
                 </div>
             </div>
 
-            <!-- Referral List -->
             <div class="history-container" style="margin-top: 25px;">
                 <h3>Your Referred Users</h3>
                 <div style="max-height: 300px; overflow-y: auto;">
@@ -1106,7 +1104,7 @@ window.watchAd = () => {
     try {
         if (typeof window.Adsgram === 'undefined') { throw new Error("Adsgram SDK not loaded"); }
         
-        const AdController = window.Adsgram.init({ blockId: "int-18014" });
+        const AdController = window.Adsgram.init({ blockId: "18940" });
 
         AdController.show().then((result) => {
             const newWatchedCount = window.adsWatched + 1;
@@ -1545,7 +1543,6 @@ async function processWithdrawalRequest() {
         const snapshot = await get(userRef);
         const userData = snapshot.val();
 
-        // Condition for non-Indian users
         if (userCountry !== 'IN' && (!userData.completedTasks || Object.keys(userData.completedTasks).length === 0)) {
             WebApp.showAlert("You must complete at least one task before you can withdraw.");
             return;
@@ -1575,7 +1572,7 @@ window.watchWithdrawalAd = () => {
 
     try {
         if (typeof window.Adsgram === 'undefined') { throw new Error("Adsgram SDK not loaded"); }
-        const AdController = window.Adsgram.init({ blockId: "int-18888" }); // Withdrawal Block ID
+        const AdController = window.Adsgram.init({ blockId: "int-18888" });
 
         AdController.show().then(() => {
             withdrawalAdsWatched++;
