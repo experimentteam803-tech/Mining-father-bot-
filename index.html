@@ -209,7 +209,7 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
 .mine-btn { margin-top: 40px; }
 #miningCountdown {color: var(--text-light); font-size: 18px; margin-top: 10px; font-weight: 600; text-align: center;}
 #adStatus {color: var(--secondary-glow); font-size: 16px; margin-top: 10px; font-weight: 600; text-align: center;}
-.wallet-summary, .referral-box, .referral-details, .gift-container, .history-container, .modal-content {
+.wallet-summary, .referral-box, .referral-details, .gift-container, .history-container, .modal-content, .ad-card {
     background: var(--bg-light); padding: 20px; border-radius: 12px; margin: 20px 0;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5); border: 1px solid var(--border-color); text-align: center;
 }
@@ -287,6 +287,21 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     color: var(--secondary-glow);
     font-weight: 700;
 }
+.ad-card .ad-provider-logo {
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+    border-radius: 5px;
+}
+.ad-card .ad-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
+    color: var(--secondary-glow);
+    font-weight: 600;
+    margin-bottom: 20px;
+}
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -344,29 +359,45 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     <section id="watch" class="section">
         <h2 style="text-align: center; color: var(--primary-glow);">Watch Ads & Earn Coins</h2>
         
-        <!-- Adsgram Section -->
-        <div class="wallet-summary" style="margin-top: 30px;">
-            <p style="font-size: 1.2em; color: var(--secondary-glow); font-weight: 600; margin-bottom: 20px;">
-                Watch 20 Ads daily and earn 75 Coins for each Ad! (Adsgram)
-            </p>
-            <button class="action-btn ad-btn" id="watchAdsgramBtn" onclick="watchAdsgramAd()" style="width: 100%;">
-                📺 Watch Ad (Adsgram)
+        <div class="ad-card">
+            <div class="ad-title">
+                <img src="https://i.imgur.com/2s35r5u.png" class="ad-provider-logo" alt="Monetag">
+                <span>Watch & Earn (1)</span>
+            </div>
+            <p>Watch 10 Ads and earn 75 Coins for each Ad!</p>
+            <button class="action-btn ad-btn" id="watchMonetagBtn" onclick="watchMonetagAd()" style="width: 100%;">
+                📺 Watch Ad
             </button>
-            <div id="adsgramAdStatus" style="color: var(--text-light); font-size: 18px; margin-top: 20px; font-weight: 600; text-align: center;">
-                Ads Watched: 0/20
+            <div id="monetagAdStatus" style="color: var(--text-light); font-size: 16px; margin-top: 15px; font-weight: 600; text-align: center;">
+                Ads Watched: 0/10
             </div>
         </div>
 
-        <!-- Monetag Section -->
-        <div class="wallet-summary" style="margin-top: 30px;">
-            <p style="font-size: 1.2em; color: var(--secondary-glow); font-weight: 600; margin-bottom: 20px;">
-                Watch 10 Ads daily and earn 75 Coins for each Ad! (Monetag)
-            </p>
-            <button class="action-btn ad-btn" id="watchMonetagBtn" onclick="watchMonetagAd()" style="width: 100%;">
-                📺 Watch Ad (Monetag)
+        <div class="ad-card">
+            <div class="ad-title">
+                <img src="https://i.imgur.com/rN51crA.png" class="ad-provider-logo" alt="Adsgram">
+                 <span>Watch & Earn (2)</span>
+            </div>
+            <p>Watch 5 Ads and earn 75 Coins for each Ad!</p>
+            <button class="action-btn ad-btn" id="watchNewAdsgramBtn" onclick="watchNewAdsgramAd()" style="width: 100%;">
+                📺 Watch Ad
             </button>
-            <div id="monetagAdStatus" style="color: var(--text-light); font-size: 18px; margin-top: 20px; font-weight: 600; text-align: center;">
-                Ads Watched: 0/10
+            <div id="newAdsgramAdStatus" style="color: var(--text-light); font-size: 16px; margin-top: 15px; font-weight: 600; text-align: center;">
+                Ads Watched: 0/5
+            </div>
+        </div>
+        
+        <div class="ad-card">
+            <div class="ad-title">
+                <img src="https://i.imgur.com/rN51crA.png" class="ad-provider-logo" alt="Adsgram">
+                <span>Watch & Earn (3)</span>
+            </div>
+             <p>Watch 20 Ads and earn 75 Coins for each Ad!</p>
+            <button class="action-btn ad-btn" id="watchAdsgramBtn" onclick="watchAdsgramAd()" style="width: 100%;">
+                📺 Watch Ad
+            </button>
+            <div id="adsgramAdStatus" style="color: var(--text-light); font-size: 16px; margin-top: 15px; font-weight: 600; text-align: center;">
+                Ads Watched: 0/20
             </div>
         </div>
     </section>
@@ -625,6 +656,8 @@ window.adsWatched = 0;
 window.adsWatchedTimestamp = 0;
 window.adsgramAdsWatched = 0; 
 window.adsgramAdsTimestamp = 0; 
+window.newAdsgramAdsWatched = 0;
+window.newAdsgramAdsTimestamp = 0;
 window.monetagAdsWatched = 0; 
 window.monetagAdsTimestamp = 0; 
 window.dbRef = ref(database, DB_NODE_PATH);
@@ -637,12 +670,13 @@ const INTL_COINS_PER_INCREMENT = 0.125;
 const ONE_HOUR_MS = 60 * 60 * 1000;
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000; 
-const MIN_WITHDRAWAL_COINS = 30000; // Updated
+const MIN_WITHDRAWAL_COINS = 30000; 
 const MIN_INTL_WITHDRAWAL_COINS = 100000;
 const REFERRAL_BONUS = 500;
 window.ADS_REQUIRED = 10;
 window.AD_REWARD_COINS = 5;
-const ADSGRAM_ADS_REQUIRED = 20; 
+const ADSGRAM_ADS_REQUIRED = 5; 
+const NEW_ADSGRAM_ADS_REQUIRED = 20;
 const MONETAG_ADS_REQUIRED = 10;
 const REWARD_AD_COINS = 75; 
 const WITHDRAWAL_ADS_REQUIRED = 10;
@@ -653,7 +687,7 @@ let withdrawalSettings = {
     paypal: { locked: false, message: '' },
     crypto: { locked: false, message: '' }
 };
-let userCountry = ''; // To store user's country
+let userCountry = ''; 
 
 // Referral System Variables
 window.referrerId = null; 
@@ -747,6 +781,7 @@ function loadUserData() {
                 userName: USER_NAME, lastActive: Date.now(), joinDate: Date.now(),
                 country: newUserCountry || 'N/A',
                 adsgramAdsWatched: 0, adsgramAdsTimestamp: 0,
+                newAdsgramAdsWatched: 0, newAdsgramAdsTimestamp: 0,
                 monetagAdsWatched: 0, monetagAdsTimestamp: 0
             };
             
@@ -1044,7 +1079,9 @@ function updateGlobalState(data) {
     window.upiId = data.upiId || '';
     window.referrerId = data.referredBy || null;
     window.adsgramAdsWatched = data.adsgramAdsWatched || 0; 
-    window.adsgramAdsTimestamp = data.adsgramAdsTimestamp || 0; 
+    window.adsgramAdsTimestamp = data.adsgramAdsTimestamp || 0;
+    window.newAdsgramAdsWatched = data.newAdsgramAdsWatched || 0;
+    window.newAdsgramAdsTimestamp = data.newAdsgramAdsTimestamp || 0; 
     window.monetagAdsWatched = data.monetagAdsWatched || 0; 
     window.monetagAdsTimestamp = data.monetagAdsTimestamp || 0; 
 }
@@ -1059,6 +1096,9 @@ function processDataForStateUpdate() {
     
     if (window.adsgramAdsWatched >= ADSGRAM_ADS_REQUIRED && Date.now() - window.adsgramAdsTimestamp >= TWELVE_HOURS_MS) {
         updateDatabase({ adsgramAdsWatched: 0, adsgramAdsTimestamp: 0 });
+    }
+    if (window.newAdsgramAdsWatched >= NEW_ADSGRAM_ADS_REQUIRED && Date.now() - window.newAdsgramAdsTimestamp >= TWELVE_HOURS_MS) {
+        updateDatabase({ newAdsgramAdsWatched: 0, newAdsgramAdsTimestamp: 0 });
     }
     if (window.monetagAdsWatched >= MONETAG_ADS_REQUIRED && Date.now() - window.monetagAdsTimestamp >= TWELVE_HOURS_MS) {
         updateDatabase({ monetagAdsWatched: 0, monetagAdsTimestamp: 0 });
@@ -1363,19 +1403,6 @@ window.toggleReferralTracking = () => {
 }
 
 function updateRewardAdStatus() {
-    // Adsgram
-    const adsgramStatusEl = document.getElementById('adsgramAdStatus');
-    const adsgramButtonEl = document.getElementById('watchAdsgramBtn');
-    if (window.adsgramAdsWatched >= ADSGRAM_ADS_REQUIRED && Date.now() - window.adsgramAdsTimestamp < TWELVE_HOURS_MS) {
-        const remainingTime = (window.adsgramAdsTimestamp + TWELVE_HOURS_MS) - Date.now();
-        adsgramButtonEl.disabled = true;
-        adsgramStatusEl.innerText = `Next ads in: ${formatTime(remainingTime)}`;
-    } else {
-        adsgramStatusEl.innerText = `Ads Watched: ${window.adsgramAdsWatched}/${ADSGRAM_ADS_REQUIRED}`;
-        adsgramButtonEl.disabled = window.adsgramAdsWatched >= ADSGRAM_ADS_REQUIRED;
-        adsgramButtonEl.innerText = window.adsgramAdsWatched >= ADSGRAM_ADS_REQUIRED ? '✅ All Ads Watched' : '📺 Watch Ad (Adsgram)';
-    }
-
     // Monetag
     const monetagStatusEl = document.getElementById('monetagAdStatus');
     const monetagButtonEl = document.getElementById('watchMonetagBtn');
@@ -1389,9 +1416,36 @@ function updateRewardAdStatus() {
         monetagButtonEl.innerText = window.monetagAdsWatched >= MONETAG_ADS_REQUIRED ? '✅ All Ads Watched' : '📺 Watch Ad (Monetag)';
     }
 
-    if (typeof updateRewardAdStatus.interval === 'undefined' && (window.adsgramAdsWatched >= ADSGRAM_ADS_REQUIRED || window.monetagAdsWatched >= MONETAG_ADS_REQUIRED)) {
+    // New Adsgram
+    const newAdsgramStatusEl = document.getElementById('newAdsgramAdStatus');
+    const newAdsgramButtonEl = document.getElementById('watchNewAdsgramBtn');
+    if (window.newAdsgramAdsWatched >= NEW_ADSGRAM_ADS_REQUIRED && Date.now() - window.newAdsgramAdsTimestamp < TWELVE_HOURS_MS) {
+        const remainingTime = (window.newAdsgramAdsTimestamp + TWELVE_HOURS_MS) - Date.now();
+        newAdsgramButtonEl.disabled = true;
+        newAdsgramStatusEl.innerText = `Next ads in: ${formatTime(remainingTime)}`;
+    } else {
+        newAdsgramStatusEl.innerText = `Ads Watched: ${window.newAdsgramAdsWatched}/${NEW_ADSGRAM_ADS_REQUIRED}`;
+        newAdsgramButtonEl.disabled = window.newAdsgramAdsWatched >= NEW_ADSGRAM_ADS_REQUIRED;
+        newAdsgramButtonEl.innerText = window.newAdsgramAdsWatched >= NEW_ADSGRAM_ADS_REQUIRED ? '✅ All Ads Watched' : '📺 Watch Ad (Adsgram)';
+    }
+
+    // Old Adsgram
+    const adsgramStatusEl = document.getElementById('adsgramAdStatus');
+    const adsgramButtonEl = document.getElementById('watchAdsgramBtn');
+    if (window.adsgramAdsWatched >= ADSGRAM_ADS_REQUIRED && Date.now() - window.adsgramAdsTimestamp < TWELVE_HOURS_MS) {
+        const remainingTime = (window.adsgramAdsTimestamp + TWELVE_HOURS_MS) - Date.now();
+        adsgramButtonEl.disabled = true;
+        adsgramStatusEl.innerText = `Next ads in: ${formatTime(remainingTime)}`;
+    } else {
+        adsgramStatusEl.innerText = `Ads Watched: ${window.adsgramAdsWatched}/${ADSGRAM_ADS_REQUIRED}`;
+        adsgramButtonEl.disabled = window.adsgramAdsWatched >= ADSGRAM_ADS_REQUIRED;
+        adsgramButtonEl.innerText = window.adsgramAdsWatched >= ADSGRAM_ADS_REQUIRED ? '✅ All Ads Watched' : '📺 Watch Ad (Adsgram)';
+    }
+
+
+    if (typeof updateRewardAdStatus.interval === 'undefined' && (window.adsgramAdsWatched >= ADSGRAM_ADS_REQUIRED || window.newAdsgramAdsWatched >= NEW_ADSGRAM_ADS_REQUIRED || window.monetagAdsWatched >= MONETAG_ADS_REQUIRED)) {
         updateRewardAdStatus.interval = setInterval(updateRewardAdStatus, 1000);
-    } else if (window.adsgramAdsWatched < ADSGRAM_ADS_REQUIRED && window.monetagAdsWatched < MONETAG_ADS_REQUIRED) {
+    } else if (window.adsgramAdsWatched < ADSGRAM_ADS_REQUIRED && window.newAdsgramAdsWatched < NEW_ADSGRAM_ADS_REQUIRED && window.monetagAdsWatched < MONETAG_ADS_REQUIRED) {
         clearInterval(updateRewardAdStatus.interval);
         updateRewardAdStatus.interval = undefined;
     }
@@ -1426,6 +1480,43 @@ window.watchAdsgramAd = () => {
             WebApp.showAlert("Ad was skipped. No reward.");
         }).finally(() => {
             if (window.adsgramAdsWatched < ADSGRAM_ADS_REQUIRED) {
+                watchBtn.disabled = false; watchBtn.innerText = '📺 Watch Ad (Adsgram)';
+            }
+        });
+    } catch (e) {
+        WebApp.showAlert("Ad service failed. Try again.");
+        watchBtn.disabled = false; watchBtn.innerText = '📺 Watch Ad (Adsgram)';
+    }
+}
+
+window.watchNewAdsgramAd = () => {
+    if (window.newAdsgramAdsWatched >= NEW_ADSGRAM_ADS_REQUIRED) { return; }
+    const watchBtn = document.getElementById('watchNewAdsgramBtn');
+    watchBtn.disabled = true; watchBtn.innerText = '🎥 Loading...';
+
+    try {
+        if (typeof window.Adsgram === 'undefined') { throw new Error("Adsgram SDK not loaded"); }
+        const AdController = window.Adsgram.init({ blockId: "18942" }); // NEW BLOCK ID
+
+        AdController.show().then(() => {
+            const newCount = window.newAdsgramAdsWatched + 1;
+            const updates = {
+                coins: window.coins + REWARD_AD_COINS,
+                newAdsgramAdsWatched: newCount,
+                newAdsgramAdsTimestamp: newCount >= NEW_ADSGRAM_ADS_REQUIRED ? Date.now() : window.newAdsgramAdsTimestamp
+            };
+            update(window.dbRef, updates).then(() => {
+                WebApp.showPopup({ message: `+${REWARD_AD_COINS} Coins!` });
+                playSuccessSound();
+                window.coins += REWARD_AD_COINS;
+                window.newAdsgramAdsWatched = newCount;
+                if(newCount >= NEW_ADSGRAM_ADS_REQUIRED) window.newAdsgramAdsTimestamp = Date.now();
+                updateCoinDisplays(); updateRewardAdStatus();
+            });
+        }).catch(() => {
+            WebApp.showAlert("Ad was skipped. No reward.");
+        }).finally(() => {
+            if (window.newAdsgramAdsWatched < NEW_ADSGRAM_ADS_REQUIRED) {
                 watchBtn.disabled = false; watchBtn.innerText = '📺 Watch Ad (Adsgram)';
             }
         });
@@ -1712,7 +1803,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.showSection = (sectionId, button) => {
-  // In-App Interstitial Ad Code
   show_9969043({
     type: 'inApp',
     inAppSettings: {
