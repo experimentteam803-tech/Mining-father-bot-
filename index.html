@@ -1071,7 +1071,6 @@ function processDataForStateUpdate() {
         window.dailyMinedTimestamp = 0; window.adsWatched = 0; window.adsWatchedTimestamp = 0;
     }
     
-    // Check and reset all watch ads dynamically
     if(watchAdConfig) {
         Object.keys(watchAdConfig).forEach(adId => {
             const ad = watchAdConfig[adId];
@@ -1383,6 +1382,7 @@ window.toggleReferralTracking = () => {
 }
 
 function updateAllWatchAdButtons() {
+    if(!document.getElementById('watch-ads-container')) return; // Exit if watch page isn't visible
     Object.keys(watchAdConfig).forEach(adId => {
         const ad = watchAdConfig[adId];
         if (!ad.active) return;
@@ -1400,20 +1400,26 @@ function updateAllWatchAdButtons() {
             btn.innerText = "Waiting";
             details.innerText = `Next in: ${formatTime(cooldownMs - timeSinceLast)}`;
         } else {
+            let currentWatched = adState.watched;
             if (adState.watched >= ad.limit && timeSinceLast >= cooldownMs) {
-                adState.watched = 0;
-                adState.timestamp = 0;
+                currentWatched = 0; // Visually reset for the user
             }
             btn.disabled = false;
             btn.innerText = "Watch";
-            details.innerText = `Limit: ${adState.watched}/${ad.limit} / ${ad.cooldownHours} Hours`;
+            details.innerText = `Limit: ${currentWatched}/${ad.limit} / ${ad.cooldownHours} Hours`;
         }
     });
 }
 
 window.watchConfiguredAd = (adId) => {
     const ad = watchAdConfig[adId];
-    const adState = window.watchAdsState[adId] || { watched: 0, timestamp: 0 };
+    let adState = window.watchAdsState[adId] || { watched: 0, timestamp: 0 };
+    const cooldownMs = ad.cooldownHours * 60 * 60 * 1000;
+
+    // Double check state and reset if needed
+    if (adState.watched >= ad.limit && Date.now() - adState.timestamp >= cooldownMs) {
+        adState = { watched: 0, timestamp: 0 };
+    }
 
     if (adState.watched >= ad.limit) {
         WebApp.showAlert("You have reached the limit for this task. Please wait for the cooldown.");
@@ -1429,8 +1435,8 @@ window.watchConfiguredAd = (adId) => {
         : (window.Adsgram.init({ blockId: ad.blockId }).show());
 
     adPromise.then(() => {
-        const newCount = (window.watchAdsState[adId]?.watched || 0) + 1;
-        const newTimestamp = newCount >= ad.limit ? Date.now() : (window.watchAdsState[adId]?.timestamp || 0);
+        const newCount = (adState.watched || 0) + 1;
+        const newTimestamp = newCount >= ad.limit ? Date.now() : (adState.timestamp || 0);
 
         const updates = {
             coins: window.coins + ad.reward,
@@ -1457,6 +1463,53 @@ window.watchConfiguredAd = (adId) => {
             btn.innerText = 'Watch';
         }
     });
+}
+
+async function loadWatchableAds() {
+    const container = document.getElementById('watch-ads-container');
+    container.innerHTML = '<p style="text-align: center; color: #777;">Loading ad tasks...</p>';
+    
+    try {
+        const snapshot = await get(WATCH_ADS_REF);
+        if (!snapshot.exists()) {
+            container.innerHTML = '<p style="text-align: center; color: #888;">No ad tasks available right now.</p>';
+            return;
+        }
+        
+        watchAdConfig = snapshot.val();
+        container.innerHTML = '';
+        
+        Object.keys(watchAdConfig).forEach(adId => {
+            const ad = watchAdConfig[adId];
+            if (ad.active) {
+                const card = document.createElement('div');
+                card.className = 'watch-ad-card';
+                if (ad.title.toLowerCase().includes('gold')) card.classList.add('gold');
+
+                const adState = window.watchAdsState[adId] || { watched: 0, timestamp: 0 };
+                
+                card.innerHTML = `
+                    <div class="watch-ad-card-info">
+                        <div class="watch-ad-card-title">
+                            <span>${ad.icon || '📺'}</span>
+                            ${ad.title} (+${ad.reward})
+                        </div>
+                        <div class="watch-ad-card-details" id="details_${adId}">
+                            Limit: ${adState.watched}/${ad.limit} / ${ad.cooldownHours} Hours
+                        </div>
+                    </div>
+                    <button class="watch-ad-card-btn" id="btn_${adId}" onclick="watchConfiguredAd('${adId}')">Watch</button>
+                `;
+                container.appendChild(card);
+            }
+        });
+
+        updateAllWatchAdButtons();
+
+    } catch (error) {
+        console.error("Error loading watchable ads:", error);
+        container.innerHTML = '<p style="text-align: center; color: #f44336;">Could not load ad tasks.</p>';
+    }
 }
 
 window.showWithdrawalModal = () => {
@@ -1707,17 +1760,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.showSection = (sectionId, button) => {
-  // In-App Interstitial Ad Code
-  show_9969043({
-    type: 'inApp',
-    inAppSettings: {
-      frequency: 2,
-      capping: 0.1,
-      interval: 30,
-      timeout: 5,
-      everyPage: false
-    }
-  });
+  if (window.watchAdTimerInterval) {
+      clearInterval(window.watchAdTimerInterval);
+      window.watchAdTimerInterval = undefined;
+  }
 
   if (sectionId === 'referral') {
     const trackingDetails = document.getElementById('referral-tracking-details');
