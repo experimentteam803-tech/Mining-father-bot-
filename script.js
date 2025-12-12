@@ -4,7 +4,6 @@ import { getDatabase, ref, set, onValue, update, push, get, query, orderByChild,
 const WebApp = window.Telegram.WebApp;
 WebApp.ready();
 
-// Safely get Telegram user data
 let telegramUser = null;
 try {
     telegramUser = WebApp.initDataUnsafe.user;
@@ -23,7 +22,6 @@ const USER_NAME = telegramUser.first_name + (telegramUser.last_name ? ' ' + tele
 document.getElementById('username').innerText = USER_NAME;
 document.getElementById('refLink').innerText = `https://t.me/MiningFather1Bot?start=${TELEGRAM_USER_ID}`;
 
-// Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyCcgl31JqffVd8bW8G23UurFhxH8IFlEfM",
     authDomain: "mining-bot-276d0.firebaseapp.com",
@@ -34,11 +32,9 @@ const firebaseConfig = {
     measurementId: "G-2FWW2SVSLR"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// Database References
 const DB_NODE_PATH = 'users/' + TELEGRAM_USER_ID;
 const ADMIN_SETTINGS_REF = ref(database, 'admin_settings');
 const TASKS_REF = ref(database, 'tasks');
@@ -47,23 +43,22 @@ const GLOBAL_POPUP_REF = ref(database, 'global_popup');
 const WITHDRAWAL_SETTINGS_REF = ref(database, 'withdrawal_settings');
 const WATCH_ADS_REF = ref(database, 'admin_settings/watch_ads');
 
-// Global State Variables
 window.coins = 0;
 window.dailyMinedTimestamp = 0;
 window.miningEndTime = 0;
 window.adsWatched = 0;
 window.adsWatchedTimestamp = 0;
-window.watchAdsState = {}; 
+window.watchAdsState = {};
 window.dbRef = ref(database, DB_NODE_PATH);
 let miningInterval = null;
 let remainingTimeInterval = null;
 let incrementCounter = 0;
 let COINS_PER_INCREMENT = 0.1;
-const MINING_RATE_MS = 450; 
-const INTL_COINS_PER_INCREMENT = 0.125; 
+const MINING_RATE_MS = 450;
+const INTL_COINS_PER_INCREMENT = 0.125;
 const ONE_HOUR_MS = 3600000;
 const TWO_HOURS_MS = 7200000;
-const MIN_WITHDRAWAL_COINS = 30000; 
+const MIN_WITHDRAWAL_COINS = 30000;
 const MIN_INTL_WITHDRAWAL_COINS = 100000;
 const REFERRAL_BONUS = 500;
 window.ADS_REQUIRED = 10;
@@ -72,16 +67,13 @@ const WITHDRAWAL_ADS_REQUIRED = 10;
 let withdrawalAdsWatched = 0;
 let isInitialLoadComplete = false;
 let withdrawalSettings = { upi: {}, paypal: {}, crypto: {} };
-let userCountry = ''; 
+let userCountry = '';
 let watchAdConfig = {};
-
-// Referral System Variables
-window.referrerId = null; 
-let commissionToAward = 0; 
+window.referrerId = null;
+let commissionToAward = 0;
 const COMMISSION_RATE = 0.05;
-let referralDataLoaded = false; 
+let referralDataLoaded = false;
 
-// DOM Elements
 const mineButton = document.getElementById('mineBtn');
 const watchAdBtn = document.getElementById('watchAdBtn');
 const adStatusDisplay = document.getElementById('adStatus');
@@ -243,6 +235,18 @@ function processDataForStateUpdate() {
         window.dailyMinedTimestamp = 0; window.adsWatched = 0; window.adsWatchedTimestamp = 0;
     }
     
+    if (watchAdConfig && Object.keys(watchAdConfig).length > 0) {
+        Object.keys(watchAdConfig).forEach(adId => {
+            const ad = watchAdConfig[adId];
+            const adState = window.watchAdsState[adId] || { watched: 0, timestamp: 0 };
+            const cooldownMs = ad.cooldownHours * 3600000;
+            if(adState.watched >= ad.limit && Date.now() - adState.timestamp >= cooldownMs) {
+                window.watchAdsState[adId] = { watched: 0, timestamp: 0 };
+                updateDatabase({ [`watchAdsState/${adId}`]: { watched: 0, timestamp: 0 } });
+            }
+        });
+    }
+
     updateCoinDisplays();
     updateMiningButtonState();
 }
@@ -277,8 +281,7 @@ window.watchAd = () => {
                 window.coins += window.AD_REWARD_COINS;
                 window.adsWatched = newCount;
                 updateCoinDisplays(); updateAdStatus();
-                if (newCount < window.ADS_REQUIRED) WebApp.showPopup({ message: `+${window.AD_REWARD_COINS} Coins! ${window.ADS_REQUIRED - newCount} more needed.` });
-                else WebApp.showPopup({ message: `Congratulations! You can now start mining!` });
+                WebApp.showPopup({ message: `+${window.AD_REWARD_COINS} Coins! ${window.ADS_REQUIRED - newCount} more needed.` });
                 playSuccessSound();
             });
         }).catch(() => WebApp.showAlert("Ad was skipped. No reward.")).finally(() => { if (window.adsWatched < window.ADS_REQUIRED) { watchAdBtn.disabled = false; watchAdBtn.innerText = '🎬 Watch Ad'; } });
@@ -611,9 +614,8 @@ window.showSection = (sectionId, button) => {
   if (window.watchAdTimerInterval) { clearInterval(window.watchAdTimerInterval); window.watchAdTimerInterval = undefined; }
   if (sectionId === 'referral') { const d = document.getElementById('referral-tracking-details'); if (d) d.style.display = 'none'; referralDataLoaded = false; }
   if (sectionId === 'watch') loadWatchableAds();
+  
   document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-  const mainElement = document.querySelector('main');
-  mainElement.style.display = 'flex';
   document.getElementById(sectionId).style.display = 'block';
   document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
   button.classList.add('active');
