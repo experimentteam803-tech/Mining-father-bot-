@@ -112,7 +112,10 @@ function updateSoundState() {
 
 async function getUserCountry() {
     const storedCountry = localStorage.getItem('userCountryCode');
-    if (storedCountry) { userCountry = storedCountry; return storedCountry; }
+    if (storedCountry) {
+        userCountry = storedCountry; 
+        return storedCountry;
+    }
     try {
         const response = await fetch('https://ipapi.co/json/');
         if (!response.ok) throw new Error('Network response was not ok');
@@ -133,8 +136,10 @@ function loadUserData() {
                 coins: 0, dailyMinedTimestamp: 0, miningEndTime: 0, adsWatched: 0,
                 adsWatchedTimestamp: 0, upiId: '', telegramId: TELEGRAM_USER_ID,
                 userName: USER_NAME, lastActive: Date.now(), joinDate: Date.now(),
-                country: newUserCountry || 'N/A', watchAdsState: {}
+                country: newUserCountry || 'N/A',
+                watchAdsState: {}
             };
+            
             const referrerId = WebApp.initDataUnsafe.start_param;
             if (referrerId && referrerId !== TELEGRAM_USER_ID) {
                 initialData.referredBy = referrerId;
@@ -151,20 +156,24 @@ function loadUserData() {
                     }
                 }).catch(e => console.error("Error awarding referral bonus:", e));
             }
+
             try {
                 await set(window.dbRef, initialData);
                 console.log("User profile created.");
-                updateGlobalState(initialData);
+                updateGlobalState(initialData); 
             } catch (error) { WebApp.showAlert("Failed to create your profile. " + error.message); }
             return;
         }
+        
         userCountry = data.country;
         COINS_PER_INCREMENT = data.country && data.country !== 'IN' ? INTL_COINS_PER_INCREMENT : 0.1;
+        
         const updates = { lastActive: Date.now(), userName: USER_NAME };
         const fetchedCountry = await getUserCountry();
         if (fetchedCountry && data.country !== fetchedCountry) updates.country = fetchedCountry;
+
         if (!isInitialLoadComplete) {
-            isInitialLoadComplete = true;
+            isInitialLoadComplete = true; 
             const lastSeen = data.lastActive || 0, sStart = data.dailyMinedTimestamp || 0, sEnd = data.miningEndTime || 0, now = Date.now();
             if (sStart > 0 && sEnd > lastSeen) {
                 const dur = Math.min(now, sEnd) - Math.max(lastSeen, sStart);
@@ -172,18 +181,26 @@ function loadUserData() {
                     const offlineCoins = Math.floor(dur / MINING_RATE_MS) * (data.country && data.country !== 'IN' ? INTL_COINS_PER_INCREMENT : 0.1);
                     if (offlineCoins > 0) {
                         data.coins += offlineCoins;
-                        updates.coins = data.coins;
+                        updates.coins = data.coins; 
                         const h = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
-                        updates[`coin_history/${h.key}`] = { reason: 'Offline Mining', amount: parseFloat(offlineCoins.toFixed(3)), timestamp: Date.now() };
+                        updates[`coin_history/${h.key}`] = { 
+                            reason: 'Offline Mining', 
+                            amount: parseFloat(offlineCoins.toFixed(3)), 
+                            timestamp: Date.now() 
+                        };
                     }
                 }
             }
         }
-        updateGlobalState(data);
+        
+        updateGlobalState(data); 
+
         if (Object.keys(updates).length > 2 || (updates.country && data.country !== updates.country) || updates.coins) {
-            update(window.dbRef, updates);
+             update(window.dbRef, updates);
         }
+
         processDataForStateUpdate();
+
     }, (error) => { console.error("Firebase Read Error:", error); WebApp.showAlert("Failed to load user data."); });
 }
 function listenForNotifications() {
@@ -217,6 +234,7 @@ function processDataForStateUpdate() {
         updateDatabase({ dailyMinedTimestamp: 0, adsWatched: 0, adsWatchedTimestamp: 0 });
         window.dailyMinedTimestamp = 0; window.adsWatched = 0; window.adsWatchedTimestamp = 0;
     }
+    
     if (watchAdConfig) {
         Object.keys(watchAdConfig).forEach(id => {
             const ad = watchAdConfig[id], state = window.watchAdsState[id] || { watched: 0, timestamp: 0 };
@@ -225,6 +243,7 @@ function processDataForStateUpdate() {
             }
         });
     }
+
     updateCoinDisplays();
     updateMiningButtonState();
     updateAllWatchAdButtons();
@@ -249,7 +268,7 @@ window.watchAd = () => {
     if (window.miningEndTime > Date.now() || (!window.canMineAgain() && window.dailyMinedTimestamp !== 0)) { WebApp.showAlert("Cannot watch ads now."); return; }
     watchAdBtn.disabled = true; watchAdBtn.innerText = '🎥 Loading...';
     try {
-        if (typeof window.Adsgram === 'undefined') throw new Error("SDK not loaded");
+        if (typeof window.Adsgram === 'undefined') { throw new Error("Adsgram SDK not loaded"); }
         const AdController = window.Adsgram.init({ blockId: "18940" });
         AdController.show().then(() => {
             const newCount = window.adsWatched + 1;
@@ -263,7 +282,7 @@ window.watchAd = () => {
                 WebApp.showPopup({ message: `+${window.AD_REWARD_COINS} Coins! ${window.ADS_REQUIRED - newCount} more needed.` });
                 playSuccessSound();
             });
-        }).catch(() => WebApp.showAlert("Ad skipped. No reward.")).finally(() => { if (window.adsWatched < window.ADS_REQUIRED) { watchAdBtn.disabled = false; watchAdBtn.innerText = '🎬 Watch Ad'; } });
+        }).catch(() => WebApp.showAlert("Ad was skipped. No reward.")).finally(() => { if (window.adsWatched < window.ADS_REQUIRED) { watchAdBtn.disabled = false; watchAdBtn.innerText = '🎬 Watch Ad'; } });
     } catch (e) { WebApp.showAlert("Ad service failed."); watchAdBtn.disabled = false; watchAdBtn.innerText = '🎬 Watch Ad'; }
 };
 function updateAdStatus() {
@@ -360,7 +379,7 @@ function updateMiningButtonState() {
     } else {
         stopAllMiningSounds(); if(miningEffectContainer) miningEffectContainer.innerHTML = '';
         mineCircle.classList.remove('mining-active-glow');
-        mineButton.disabled = true; mineButton.innerText = '🔒 Watch Ads to Unlock'; mineButton.style.background = '#808080';
+        mineButton.disabled = true; mineButton.innerText = `🔒 Watch Ads to Unlock`; mineButton.style.background = '#808080';
         countdownDisplay.innerText = `Watch ${window.ADS_REQUIRED - window.adsWatched} more ads to start.`;
     }
     updateSoundState();
@@ -410,11 +429,13 @@ function updateAllWatchAdButtons() {
     });
 }
 
+// *** FIX: Made function globally accessible ***
 window.watchConfiguredAd = (adId) => {
     const ad = watchAdConfig[adId];
     let adState = window.watchAdsState[adId] || { watched: 0, timestamp: 0 };
-    if (adState.watched >= ad.limit && Date.now() - adState.timestamp < ad.cooldownHours * 3600000) { WebApp.showAlert("Limit reached. Wait for cooldown."); return; }
-    if (adState.watched >= ad.limit && Date.now() - adState.timestamp >= ad.cooldownHours * 3600000) adState = { watched: 0, timestamp: 0 };
+    const cooldownMs = ad.cooldownHours * 3600000;
+    if (adState.watched >= ad.limit && Date.now() - adState.timestamp < cooldownMs) { WebApp.showAlert("Limit reached. Wait for cooldown."); return; }
+    if (adState.watched >= ad.limit && Date.now() - adState.timestamp >= cooldownMs) adState = { watched: 0, timestamp: 0 };
     const btn = document.getElementById(`btn_${adId}`);
     btn.disabled = true; btn.innerText = 'Loading...';
     const adPromise = ad.provider === 'monetag' ? show_9969043('pop') : window.Adsgram.init({ blockId: ad.blockId }).show();
@@ -429,9 +450,10 @@ window.watchConfiguredAd = (adId) => {
             playSuccessSound();
             window.coins += ad.reward;
             window.watchAdsState[adId] = { watched: newCount, timestamp: newTimestamp };
-            updateCoinDisplays(); updateAllWatchAdButtons();
+            updateCoinDisplays();
+            updateAllWatchAdButtons();
         });
-    }).catch(() => WebApp.showAlert("Ad skipped. No reward.")).finally(() => { if ((window.watchAdsState[adId]?.watched || 0) < ad.limit) { btn.disabled = false; btn.innerText = 'Watch'; } });
+    }).catch(() => WebApp.showAlert("Ad was skipped or failed. No reward was given.")).finally(() => { if ((window.watchAdsState[adId]?.watched || 0) < ad.limit) { btn.disabled = false; btn.innerText = 'Watch'; } });
 }
 
 async function loadWatchableAds() {
@@ -462,7 +484,7 @@ window.showWithdrawalModal = () => {
     withdrawalModal.style.display = "block"; document.getElementById('upiAmount').value = ''; document.getElementById('upiId').value = window.upiId; document.getElementById('inrValueText').innerText = ''; submitWithdrawalBtn.disabled = true;
 }
 window.showPaypalModal = () => {
-    if (withdrawalSettings.paypal.locked) { WebApp.showPopup({ title: 'PayPal Unavailable', message: withdrawalSettings.paypal.message || 'PayPal withdrawals temporarily disabled.' }); return; }
+    if (withdrawalSettings.paypal.locked) { WebApp.showPopup({ title: 'PayPal Unavailable', message: withdrawalSettings.paypal.message || 'PayPal withdrawals are temporarily disabled.' }); return; }
     paypalModal.style.display = "block"; document.getElementById('paypalAmount').value = ''; document.getElementById('paypalEmail').value = ''; submitPaypalBtn.disabled = true;
 }
 window.showCryptoModal = () => {
@@ -504,8 +526,7 @@ async function processWithdrawalRequest() {
     try {
         const amount = Number(document.getElementById('upiAmount').value);
         const upiId = document.getElementById('upiId').value.trim();
-        const s = await get(ref(database, `users/${TELEGRAM_USER_ID}`));
-        const d = s.val();
+        const s = await get(ref(database, `users/${TELEGRAM_USER_ID}`)), d = s.val();
         if (userCountry !== 'IN' && (!d.completedTasks || Object.keys(d.completedTasks).length === 0)) { WebApp.showAlert("Complete at least one task to withdraw."); return; }
         await update(window.dbRef, { coins: window.coins - amount, upiId: upiId });
         await push(WITHDRAWALS_REF, { userId: TELEGRAM_USER_ID, userName: USER_NAME, amount: amount, upiId: upiId, type: 'UPI', timestamp: Date.now(), status: 'Pending' });
@@ -525,7 +546,7 @@ window.watchWithdrawalAd = () => {
             withdrawalAdsWatched++;
             document.getElementById('withdrawalAdStatus').innerText = `Ads Watched: ${withdrawalAdsWatched}/${WITHDRAWAL_ADS_REQUIRED}`;
             if (withdrawalAdsWatched >= WITHDRAWAL_ADS_REQUIRED) processWithdrawalRequest();
-        }).catch(() => WebApp.showAlert("Ad skipped. Watch all ads to continue.")).finally(() => { if (withdrawalAdsWatched < WITHDRAWAL_ADS_REQUIRED) { btn.disabled = false; btn.innerText = '🎬 Watch Ad'; } });
+        }).catch(() => WebApp.showAlert("Ad was skipped. Please watch all ads to continue.")).finally(() => { if (withdrawalAdsWatched < WITHDRAWAL_ADS_REQUIRED) { btn.disabled = false; btn.innerText = '🎬 Watch Ad'; } });
     } catch (e) { WebApp.showAlert("Ad service failed. Try again."); btn.disabled = false; btn.innerText = '🎬 Watch Ad'; }
 }
 
@@ -554,7 +575,6 @@ window.submitCryptoWithdrawal = async () => {
         playSuccessSound(); closeCryptoModal(); WebApp.showAlert(`Withdrawal of ${amount} Coins to Crypto Wallet submitted.`);
     } catch (e) { console.error("Crypto Error:", e); WebApp.showAlert("An error occurred."); }
 };
-
 window.onclick = function(e) {
     if (e.target == withdrawalModal) closeWithdrawalModal();
     if (e.target == taskDetailModal) closeTaskModal();
@@ -578,7 +598,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.addEventListener('click', primeAudio, { once: true });
     document.body.addEventListener('click', e => { if (e.target.matches('button, .nav-btn, .msg-icon, .profile, .task-item, .close-btn, .task-nav-btn')) playClickSound(); });
     document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) {
+        if (!document.hidden) { 
             const p = sessionStorage.getItem('awaitingVerificationPopup');
             if (p) { WebApp.showPopup({ title: 'Task in Progress', message: 'Welcome back! Please wait about a minute for the "Verify Task" button to become active, then click it to get your reward.' }); sessionStorage.removeItem('awaitingVerificationPopup'); }
             loadLiveTasks();
@@ -595,6 +615,8 @@ window.showSection = (sectionId, button) => {
   if (sectionId === 'referral') { const d = document.getElementById('referral-tracking-details'); if (d) d.style.display = 'none'; referralDataLoaded = false; }
   if (sectionId === 'watch') loadWatchableAds();
   document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+  const mainElement = document.querySelector('main');
+  mainElement.style.display = 'flex';
   document.getElementById(sectionId).style.display = 'block';
   document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
   button.classList.add('active');
