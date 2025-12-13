@@ -218,12 +218,11 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
 .balance-value { font-size: 36px; font-weight: 700; color: var(--secondary-glow); }
 .value-inr { font-size: 16px; color: var(--primary-glow); margin-top: 5px; }
 .withdrawal-note { font-size: 12px; color: var(--text-dark); margin-top: 15px; }
-.referral-box { border: 1px dashed var(--primary-glow); }
 .modal { display: none; position: fixed; z-index: 200; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px); padding-top: 60px; animation: fadeIn 0.3s; }
 .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;}
 .form-group { margin-bottom: 15px; text-align: left; }
 .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: var(--primary-glow); }
-.form-group input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-dark); color: white; }
+.form-group input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-dark); color: var(--text-light); }
 .form-group input:focus { border-color: var(--primary-glow); outline: none; }
 .navbar{
   display:flex; justify-content:space-around; background: rgba(13, 17, 23, 0.7); backdrop-filter: blur(10px);
@@ -327,6 +326,8 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     font-weight: 700;
     cursor: pointer;
     transition: background-color 0.2s, transform 0.2s;
+    min-width: 80px;
+    text-align: center;
 }
 
 .ad-task-button button:hover:enabled {
@@ -747,7 +748,7 @@ function loadUserData() {
                     offlineCoinsEarned = incrementsMissed * coinsPerIncrementForOffline;
                     
                     if (offlineCoinsEarned > 0) {
-                        data.coins += offlineCoinsEarned;
+                        data.coins = (parseFloat(data.coins) || 0) + offlineCoinsEarned;
                         updates.coins = data.coins; 
                         const historyRef = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
                         updates[`coin_history/${historyRef.key}`] = { 
@@ -762,7 +763,7 @@ function loadUserData() {
         
         updateGlobalState(data); 
 
-        if (Object.keys(updates).length > 2 || (updates.country && data.country !== updates.country) || updates.coins) {
+        if (Object.keys(updates).length > 2 || (updates.country && data.country !== updates.country) || 'coins' in updates) {
              update(window.dbRef, updates);
         }
 
@@ -979,7 +980,8 @@ function loadWithdrawalHistory() {
     });
 }
 function updateGlobalState(data) {
-    window.coins = data.coins || 0;
+    // BUG FIX: Ensure coins is always a number
+    window.coins = parseFloat(data.coins) || 0;
     window.dailyMinedTimestamp = data.dailyMinedTimestamp || 0;
     window.miningEndTime = data.miningEndTime || 0;
     window.adsWatched = data.adsWatched || 0;
@@ -1004,8 +1006,11 @@ window.updateDatabase = (updates) => {
     update(window.dbRef, updates).catch(error => console.error("Database Write Error:", error));
 };
 function updateCoinDisplays() {
-    const inrValue = (window.coins / 3000).toFixed(2);
-    const coinsStr = Math.floor(window.coins).toLocaleString();
+    // BUG FIX: Ensure coins is a valid number before displaying
+    const currentCoins = parseFloat(window.coins) || 0;
+    const inrValue = (currentCoins / 3000).toFixed(2);
+    const coinsStr = Math.floor(currentCoins).toLocaleString();
+    
     document.getElementById('coinCount').innerText = coinsStr;
     document.getElementById('walletCoins').innerText = coinsStr;
     document.getElementById('walletValue').innerText = inrValue;
@@ -1041,28 +1046,27 @@ window.watchAd = () => {
 
         AdController.show().then((result) => {
             const newWatchedCount = window.adsWatched + 1;
+            // BUG FIX: Ensure all values are numbers before calculation
+            const currentCoins = parseFloat(window.coins) || 0;
+            const rewardCoins = parseFloat(window.AD_REWARD_COINS) || 5;
             const updates = {
-                coins: window.coins + window.AD_REWARD_COINS,
+                coins: currentCoins + rewardCoins,
                 adsWatched: newWatchedCount,
                 adsWatchedTimestamp: Date.now()
             };
             const historyRef = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
             updates[`coin_history/${historyRef.key}`] = {
-                reason: 'Ad Reward (Mining)', amount: window.AD_REWARD_COINS, timestamp: Date.now()
+                reason: 'Ad Reward (Mining)', amount: rewardCoins, timestamp: Date.now()
             };
 
             update(window.dbRef, updates).then(() => {
-                window.coins += window.AD_REWARD_COINS;
-                window.adsWatched = newWatchedCount;
-                updateCoinDisplays();
-                updateAdStatus();
-
                 if (newWatchedCount < window.ADS_REQUIRED) {
-                    WebApp.showPopup({ message: `+${window.AD_REWARD_COINS} Coins! ${window.ADS_REQUIRED - newWatchedCount} more ads needed.` });
+                    WebApp.showPopup({ message: `+${rewardCoins} Coins! ${window.ADS_REQUIRED - newWatchedCount} more ads needed.` });
                 } else {
                     WebApp.showPopup({ message: `Congratulations! You can now start mining!` });
                 }
                 playSuccessSound();
+                loadUserData(); // Reload data to ensure sync
             });
         }).catch((result) => {
             WebApp.showAlert("Ad was skipped or failed. No reward was given.");
@@ -1139,7 +1143,8 @@ function resumeMiningSession() {
     incrementCounter = 0;
     
     miningInterval = setInterval(() => {
-        window.coins += COINS_PER_INCREMENT;
+        // BUG FIX: Ensure coins is a number before incrementing
+        window.coins = (parseFloat(window.coins) || 0) + COINS_PER_INCREMENT;
         incrementCounter++;
         if (incrementCounter % 20 === 0) {
             const updates = { coins: window.coins };
@@ -1261,13 +1266,14 @@ function startAdTaskCooldownTimer(taskId, duration) {
             clearInterval(interval);
             button.disabled = false;
             button.innerText = 'Watch';
-            const progress = window.adTaskProgress[taskId] || { watchedCount: 0, timestamp: 0 };
+            const progress = { watchedCount: 0, timestamp: 0 };
+             window.adTaskProgress[taskId] = progress;
             limitText.innerText = `Limit: ${progress.watchedCount}/${allAdTasks[taskId].limit}`;
              // Reset progress in database
-            update(ref(database, `${DB_NODE_PATH}/adTaskProgress/${taskId}`), { watchedCount: 0, timestamp: 0 });
+            update(ref(database, `${DB_NODE_PATH}/adTaskProgress/${taskId}`), progress);
         } else {
             button.innerText = formatTime(remaining);
-            limitText.innerText = `Resets in ${formatTime(remaining)}`;
+            limitText.innerText = `Resets in...`;
         }
     }, 1000);
 }
@@ -1296,8 +1302,13 @@ window.watchRewardAd = async (taskId) => {
     try {
         await showAdPromise;
         const newCount = progress.watchedCount + 1;
+        
+        // BUG FIX: Ensure all values are numbers
+        const currentCoins = parseFloat(window.coins) || 0;
+        const reward = parseFloat(task.reward) || 0;
+
         const updates = {};
-        updates.coins = window.coins + task.reward;
+        updates.coins = currentCoins + reward;
         updates[`adTaskProgress/${taskId}/watchedCount`] = newCount;
         if (newCount >= task.limit) {
             updates[`adTaskProgress/${taskId}/timestamp`] = Date.now();
@@ -1306,18 +1317,18 @@ window.watchRewardAd = async (taskId) => {
         const historyRef = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
         updates[`coin_history/${historyRef.key}`] = {
             reason: `${task.title} Ad Reward`,
-            amount: task.reward,
+            amount: reward,
             timestamp: Date.now()
         };
 
         await update(window.dbRef, updates);
-        WebApp.showPopup({ message: `+${task.reward} Coins!` });
+        WebApp.showPopup({ message: `+${reward} Coins!` });
         playSuccessSound();
+        loadUserData(); // Reload all data to ensure perfect sync
     } catch (error) {
         console.error("Ad error:", error);
         WebApp.showAlert("Ad was skipped or failed. No reward was given.");
-    } finally {
-        loadUserData(); 
+        loadUserData(); // Reload data even on failure to re-enable button
     }
 };
 
@@ -1367,14 +1378,14 @@ window.checkWithdrawalEligibility = () => {
     const inrValueText = document.getElementById('inrValueText');
     inrValueText.style.color = 'var(--primary-glow)';
     inrValueText.innerText = amount > 0 ? `Equivalent to ₹${(amount / 3000).toFixed(2)}` : '';
-    if (amount >= MIN_WITHDRAWAL_COINS && amount <= window.coins) {
+    if (amount >= MIN_WITHDRAWAL_COINS && amount <= (parseFloat(window.coins) || 0)) {
         submitWithdrawalBtn.disabled = false;
     } else {
         submitWithdrawalBtn.disabled = true;
         if (amount > 0 && amount < MIN_WITHDRAWAL_COINS) {
             inrValueText.innerText = `Error: Minimum is ${MIN_WITHDRAWAL_COINS} Coins.`;
             inrValueText.style.color = '#f44336';
-        } else if (amount > window.coins) {
+        } else if (amount > (parseFloat(window.coins) || 0)) {
              inrValueText.innerText = `Error: Insufficient balance.`;
              inrValueText.style.color = '#f44336';
         }
@@ -1384,7 +1395,7 @@ window.checkWithdrawalEligibility = () => {
 window.submitWithdrawal = async () => {
     const amount = Number(document.getElementById('upiAmount').value);
     const upiId = document.getElementById('upiId').value.trim();
-    if (amount < MIN_WITHDRAWAL_COINS || amount > window.coins) { WebApp.showAlert(`Withdrawal failed: Amount must be valid.`); return; }
+    if (amount < MIN_WITHDRAWAL_COINS || amount > (parseFloat(window.coins) || 0)) { WebApp.showAlert(`Withdrawal failed: Amount must be valid.`); return; }
     if (upiId.length < 5 || !upiId.includes('@')) { WebApp.showAlert("Withdrawal failed: Please enter a valid UPI ID."); return; }
 
     if (userCountry === 'IN') {
@@ -1409,7 +1420,8 @@ async function processWithdrawalRequest() {
             return;
         }
 
-        const newCoinBalance = window.coins - amount;
+        // BUG FIX: Ensure coins is a number before subtracting
+        const newCoinBalance = (parseFloat(window.coins) || 0) - amount;
         await update(window.dbRef, { coins: newCoinBalance, upiId: upiId });
         const withdrawalRequest = {
             userId: TELEGRAM_USER_ID, userName: USER_NAME, amount: amount, upiId: upiId,
@@ -1456,26 +1468,26 @@ window.watchWithdrawalAd = () => {
 
 window.checkPaypalEligibility = () => {
     const amount = Number(document.getElementById('paypalAmount').value);
-    if (amount >= MIN_INTL_WITHDRAWAL_COINS && amount <= window.coins) { submitPaypalBtn.disabled = false; }
+    if (amount >= MIN_INTL_WITHDRAWAL_COINS && amount <= (parseFloat(window.coins) || 0)) { submitPaypalBtn.disabled = false; }
     else { submitPaypalBtn.disabled = true; }
 }
 window.checkCryptoEligibility = () => {
     const amount = Number(document.getElementById('cryptoAmount').value);
-    if (amount >= MIN_INTL_WITHDRAWAL_COINS && amount <= window.coins) { submitCryptoBtn.disabled = false; }
+    if (amount >= MIN_INTL_WITHDRAWAL_COINS && amount <= (parseFloat(window.coins) || 0)) { submitCryptoBtn.disabled = false; }
     else { submitCryptoBtn.disabled = true; }
 }
 window.submitPaypalWithdrawal = async () => {
     const amount = Number(document.getElementById('paypalAmount').value);
     const paypalEmail = document.getElementById('paypalEmail').value.trim();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (amount < MIN_INTL_WITHDRAWAL_COINS || amount > window.coins) { WebApp.showAlert(`Withdrawal failed: Amount must be valid.`); return; }
+    if (amount < MIN_INTL_WITHDRAWAL_COINS || amount > (parseFloat(window.coins) || 0)) { WebApp.showAlert(`Withdrawal failed: Amount must be valid.`); return; }
     if (!emailRegex.test(paypalEmail)) { WebApp.showAlert("Withdrawal failed: Please enter a valid PayPal email address."); return; }
     try {
         const userRef = ref(database, `users/${TELEGRAM_USER_ID}`);
         const snapshot = await get(userRef);
         const userData = snapshot.val();
         if (userData && userData.completedTasks && Object.keys(userData.completedTasks).length > 0) {
-            const newCoinBalance = window.coins - amount;
+            const newCoinBalance = (parseFloat(window.coins) || 0) - amount;
             await update(window.dbRef, { coins: newCoinBalance });
             const withdrawalRequest = {
                 userId: TELEGRAM_USER_ID, userName: USER_NAME, amount: amount, paypalEmail: paypalEmail,
@@ -1495,14 +1507,14 @@ window.submitPaypalWithdrawal = async () => {
 window.submitCryptoWithdrawal = async () => {
     const amount = Number(document.getElementById('cryptoAmount').value);
     const cryptoAddress = document.getElementById('cryptoAddress').value.trim();
-    if (amount < MIN_INTL_WITHDRAWAL_COINS || amount > window.coins) { WebApp.showAlert(`Withdrawal failed: Amount must be valid.`); return; }
+    if (amount < MIN_INTL_WITHDRAWAL_COINS || amount > (parseFloat(window.coins) || 0)) { WebApp.showAlert(`Withdrawal failed: Amount must be valid.`); return; }
     if (cryptoAddress.length < 26) { WebApp.showAlert("Withdrawal failed: Please enter a valid USDT (TRC20) wallet address."); return; }
     try {
         const userRef = ref(database, `users/${TELEGRAM_USER_ID}`);
         const snapshot = await get(userRef);
         const userData = snapshot.val();
         if (userData && userData.completedTasks && Object.keys(userData.completedTasks).length > 0) {
-            const newCoinBalance = window.coins - amount;
+            const newCoinBalance = (parseFloat(window.coins) || 0) - amount;
             await update(window.dbRef, { coins: newCoinBalance });
             const withdrawalRequest = {
                 userId: TELEGRAM_USER_ID, userName: USER_NAME, amount: amount, cryptoAddress: cryptoAddress,
