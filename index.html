@@ -980,8 +980,9 @@ function loadWithdrawalHistory() {
     });
 }
 function updateGlobalState(data) {
-    // BUG FIX: Ensure coins is always a number
+    // BUG FIX (Robust): Ensure coins is always a number. If it's NaN or undefined from DB, reset to 0.
     window.coins = parseFloat(data.coins) || 0;
+    
     window.dailyMinedTimestamp = data.dailyMinedTimestamp || 0;
     window.miningEndTime = data.miningEndTime || 0;
     window.adsWatched = data.adsWatched || 0;
@@ -1006,7 +1007,7 @@ window.updateDatabase = (updates) => {
     update(window.dbRef, updates).catch(error => console.error("Database Write Error:", error));
 };
 function updateCoinDisplays() {
-    // BUG FIX: Ensure coins is a valid number before displaying
+    // BUG FIX (Robust): Ensure coins is a valid number before displaying
     const currentCoins = parseFloat(window.coins) || 0;
     const inrValue = (currentCoins / 3000).toFixed(2);
     const coinsStr = Math.floor(currentCoins).toLocaleString();
@@ -1046,9 +1047,10 @@ window.watchAd = () => {
 
         AdController.show().then((result) => {
             const newWatchedCount = window.adsWatched + 1;
-            // BUG FIX: Ensure all values are numbers before calculation
+            // BUG FIX (Robust): Ensure all values are numbers before calculation
             const currentCoins = parseFloat(window.coins) || 0;
             const rewardCoins = parseFloat(window.AD_REWARD_COINS) || 5;
+            
             const updates = {
                 coins: currentCoins + rewardCoins,
                 adsWatched: newWatchedCount,
@@ -1143,7 +1145,7 @@ function resumeMiningSession() {
     incrementCounter = 0;
     
     miningInterval = setInterval(() => {
-        // BUG FIX: Ensure coins is a number before incrementing
+        // BUG FIX (Robust): Ensure coins is a number before incrementing
         window.coins = (parseFloat(window.coins) || 0) + COINS_PER_INCREMENT;
         incrementCounter++;
         if (incrementCounter % 20 === 0) {
@@ -1303,7 +1305,7 @@ window.watchRewardAd = async (taskId) => {
         await showAdPromise;
         const newCount = progress.watchedCount + 1;
         
-        // BUG FIX: Ensure all values are numbers
+        // BUG FIX (Robust): Ensure all values are numbers
         const currentCoins = parseFloat(window.coins) || 0;
         const reward = parseFloat(task.reward) || 0;
 
@@ -1420,7 +1422,7 @@ async function processWithdrawalRequest() {
             return;
         }
 
-        // BUG FIX: Ensure coins is a number before subtracting
+        // BUG FIX (Robust): Ensure coins is a number before subtracting
         const newCoinBalance = (parseFloat(window.coins) || 0) - amount;
         await update(window.dbRef, { coins: newCoinBalance, upiId: upiId });
         const withdrawalRequest = {
