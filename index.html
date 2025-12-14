@@ -1,18 +1,17 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<!-- Viewport fixed to prevent zooming -->
+<!-- बदला हुआ Viewport: ज़ूम को बंद करने के लिए -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
 <title>CoinMine App - Telegram Mini App</title>
-
 <!-- =================================================================== -->
-<!-- SDKs: Monetag & Adsgram (Adexora loads dynamically) -->
+<!-- BOTH SDKs ARE NOW INCLUDED -->
 <script src='//libtl.com/sdk.js' data-zone='9969043' data-sdk='show_9969043'></script>
 <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+<!-- Adexora SDK Included -->
+<script src="https://adexora.com/cdn/ads.js?id=1301"></script>
 <!-- =================================================================== -->
-
 <style>
 /* === Professional Gradient & Glow Theme === */
 :root {
@@ -346,7 +345,6 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-
 <div id="app-content" style="width: 100%; height: 100%; display: flex; flex-direction: column;">
     <header>
     <div class="profile" onclick="showProfile()">
@@ -358,7 +356,6 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     <section id="home" class="section">
     <div id="totalCoins"><span id="coinCount">0</span></div>
     <h2>Your Coins</h2>
-
     <div class="circle-container">
     <div class="circle" id="mineCircle">
         <div class="mining-visual"></div>
@@ -390,12 +387,12 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
                     Complete one premium task earn more coins and unlimited withdrawal access
                 </p>
                 <div id="premium-task-items-container">
-                     <p style="text-align: center; color: #777; margin-top: 50px;">Loading premium tasks...</p>
+                    <p style="text-align: center; color: #777; margin-top: 50px;">Loading premium tasks...</p>
                 </div>
             </div>
         </div>
     </section>
-    
+
     <section id="watch" class="section">
         <h2 style="text-align: center; color: var(--primary-glow); margin-bottom: 25px;">Watch Ads & Earn Coins</h2>
         <div id="ad-task-list">
@@ -443,7 +440,7 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     </section>
 
     </main>
-    
+
     <nav class="navbar">
     <button class="nav-btn active" onclick="showSection('home', this)">🏠 Home</button>
     <button class="nav-btn" onclick="showSection('task', this)">🧩 Task</button>
@@ -469,7 +466,6 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
         <small style="display: block; text-align: center; color: #f44336; margin-top: 10px;">Withdrawals processed within 24 hours.</small>
     </div>
 </div>
-
 <div id="paypalModal" class="modal">
     <div class="modal-content">
         <span class="close-btn" onclick="closePaypalModal()">&times;</span>
@@ -487,7 +483,6 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
         <small style="display: block; text-align: center; color: #f44336; margin-top: 10px;">Withdrawals processed within 48 hours.</small>
     </div>
 </div>
-
 <div id="cryptoModal" class="modal">
     <div class="modal-content">
         <span class="close-btn" onclick="closeCryptoModal()">&times;</span>
@@ -506,8 +501,6 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
         <small style="display: block; text-align: center; color: #f44336; margin-top: 10px;">Withdrawals processed within 48 hours.</small>
     </div>
 </div>
-
-
 <div id="taskDetailModal" class="modal">
     <div class="modal-content">
         <span class="close-btn" id="closeTaskModal">&times;</span>
@@ -520,7 +513,6 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
         <button class="task-help-btn" onclick="Telegram.WebApp.openTelegramLink('https://t.me/MiningFatherhelp')">❓ Need Help?</button>
     </div>
 </div>
-
 <!-- ===== START: NEW WITHDRAWAL ADS MODAL ===== -->
 <div id="withdrawalAdsModal" class="modal">
     <div class="modal-content">
@@ -535,13 +527,10 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     </div>
 </div>
 <!-- ===== END: NEW WITHDRAWAL ADS MODAL ===== -->
-
 <audio id="preMiningSound" src="pre-mining.mp3" preload="auto" loop></audio>
 <audio id="miningSound" src="mining.mp3" preload="auto" loop></audio>
 <audio id="clickSound" src="click.mp3" preload="auto"></audio>
 <audio id="successSound" src="success.mp3" preload="auto"></audio>
-
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, set, onValue, update, push, get, query, orderByChild, equalTo, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
@@ -555,17 +544,17 @@ let telegramUser = null;
 try {
     telegramUser = WebApp.initDataUnsafe.user;
     if (!telegramUser || !telegramUser.id) {
-        // Uncomment in production
-        // WebApp.showAlert("Could not verify your Telegram account. Please try restarting the app through Telegram.", () => WebApp.close());
-        // throw new Error("Missing Telegram User ID");
+        WebApp.showAlert("Could not verify your Telegram account. Please try restarting the app through Telegram.", () => WebApp.close());
+        throw new Error("Missing Telegram User ID");
     }
 } catch (error) {
     console.error("Critical Error: Could not get Telegram user data.", error);
+    WebApp.showAlert("A critical error occurred while loading your profile. Please restart the app.", () => WebApp.close());
+    throw new Error("App halted due to missing user data.");
 }
 
-// Fallback for testing/dev (Remove in strict production if needed, but safe here)
-const TELEGRAM_USER_ID = telegramUser ? telegramUser.id.toString() : "TEST_USER_123";
-const USER_NAME = telegramUser ? (telegramUser.first_name + (telegramUser.last_name ? ' ' + telegramUser.last_name : '')) : "Test User";
+const TELEGRAM_USER_ID = telegramUser.id.toString();
+const USER_NAME = telegramUser.first_name + (telegramUser.last_name ? ' ' + telegramUser.last_name : '');
 document.getElementById('username').innerText = USER_NAME;
 
 
@@ -841,8 +830,8 @@ async function loadLiveTasks() {
     if (!userCountry) userCountry = await getUserCountry();
     if (!userCountry) {
         const errorMsg = '<p style="text-align: center; color: #777; margin-top: 50px;">Could not determine your location to show relevant tasks.</p>';
-        if(dailyTaskContainer) dailyTaskContainer.innerHTML = errorMsg;
-        if(premiumTaskContainer) premiumTaskContainer.innerHTML = errorMsg;
+        dailyTaskContainer.innerHTML = errorMsg;
+        premiumTaskContainer.innerHTML = errorMsg;
         return;
     }
     const userTasksRef = ref(database, `users/${TELEGRAM_USER_ID}`);
@@ -851,8 +840,8 @@ async function loadLiveTasks() {
     const startedTasks = userData.startedTasks || {};
     const completedTasks = userData.completedTasks || {};
     onValue(TASKS_REF, (snapshot) => {
-        if(dailyTaskContainer) dailyTaskContainer.innerHTML = '';
-        if(premiumTaskContainer) premiumTaskContainer.innerHTML = '';
+        dailyTaskContainer.innerHTML = '';
+        premiumTaskContainer.innerHTML = '';
         const tasks = snapshot.val();
         allTasks = tasks;
         let dailyTaskHtml = '';
@@ -1213,7 +1202,6 @@ function updateMiningButtonState() {
 
 function loadAdTasks() {
     const container = document.getElementById('ad-task-list');
-    if(!container) return;
     container.innerHTML = ''; 
     let activeTasksFound = false;
 
@@ -1282,84 +1270,41 @@ function startAdTaskCooldownTimer(taskId, duration) {
     }, 1000);
 }
 
-// ===== FIXED WATCH AD FUNCTION (BUG FIXED HERE) =====
 window.watchRewardAd = async (taskId) => {
     const task = allAdTasks[taskId];
     if (!task) {
-        WebApp.showAlert("Task unavailable.");
+        WebApp.showAlert("This task is no longer available.");
         return;
     }
 
-    // 1. Provider Logic: Fix case sensitivity issue
-    let rawProvider = (task.provider || 'monetag').toString().toLowerCase().trim();
-    
-    // Debug Alert (Remove later if needed)
-    // WebApp.showAlert("Provider Found: " + rawProvider);
-
     const progress = window.adTaskProgress[taskId] || { watchedCount: 0, timestamp: 0 };
     if (progress.watchedCount >= task.limit) {
-        WebApp.showAlert("Daily limit reached for this task.");
+        WebApp.showAlert("You have reached the limit for this task.");
         return;
     }
 
     const button = document.getElementById(`button-${taskId}`);
     button.disabled = true;
-    button.innerText = 'Loading...';
+    button.innerText = '...';
 
-    const showAdPromise = new Promise((resolve, reject) => {
-        
-        // === 1. ADEXORA LOGIC ===
-        if (rawProvider.includes('adexora')) {
-             const scriptId = `adexora-script-${task.blockId}`;
-             
-             // Function to run ad
-             const runAdexora = () => {
-                 if (typeof window.showAdexora === 'function') {
-                     window.showAdexora().then(resolve).catch(reject);
-                 } else {
-                     reject("Adexora SDK loaded but function missing.");
-                 }
-             };
-
-             // Load Script if not present
-             if (!document.getElementById(scriptId)) {
-                 const script = document.createElement('script');
-                 script.id = scriptId;
-                 script.src = `https://adexora.com/cdn/ads.js?id=${task.blockId}`;
-                 
-                 script.onload = () => { setTimeout(runAdexora, 500); };
-                 script.onerror = () => reject("Failed to load Adexora script.");
-                 document.body.appendChild(script);
-             } else {
-                 runAdexora();
-             }
-        } 
-        
-        // === 2. ADSGRAM LOGIC ===
-        else if (rawProvider.includes('adsgram')) {
-             if (window.Adsgram) {
-                window.Adsgram.init({ blockId: task.blockId }).show().then(resolve).catch(reject);
-             } else {
-                reject("Adsgram SDK not found.");
-             }
-        } 
-        
-        // === 3. MONETAG LOGIC (Default Fallback) ===
-        else {
-             if (typeof show_9969043 === 'function') {
-                 show_9969043().then(resolve).catch(reject);
-             } else {
-                 reject("No ad provider found.");
-             }
-        }
-    });
+    // === UPDATED LOGIC FOR ADEXORA ===
+    let showAdPromise;
+    if (task.provider === 'adsgram') {
+        showAdPromise = window.Adsgram.init({ blockId: task.blockId }).show();
+    } else if (task.provider === 'adexora') {
+        // Adexora Logic
+        showAdPromise = window.showAdexora();
+    } else {
+        // Default (Monetag/Other)
+        showAdPromise = show_9969043();
+    }
+    // =================================
 
     try {
         await showAdPromise;
-        
-        // --- Success Logic ---
         const newCount = progress.watchedCount + 1;
-        // Fix: Ensure numbers
+        
+        // BUG FIX (Robust): Ensure all values are numbers
         const currentCoins = parseFloat(window.coins) || 0;
         const reward = parseFloat(task.reward) || 0;
 
@@ -1372,19 +1317,19 @@ window.watchRewardAd = async (taskId) => {
 
         const historyRef = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
         updates[`coin_history/${historyRef.key}`] = {
-            reason: `${task.title} Reward`,
+            reason: `${task.title} Ad Reward`,
             amount: reward,
             timestamp: Date.now()
         };
 
         await update(window.dbRef, updates);
-        WebApp.showPopup({ message: `Success! +${reward} Coins added.` });
+        WebApp.showPopup({ message: `+${reward} Coins!` });
         playSuccessSound();
-        loadUserData();
+        loadUserData(); // Reload all data to ensure perfect sync
     } catch (error) {
-        console.error("Ad failed:", error);
-        WebApp.showAlert("Ad skipped or failed to load. Try again.");
-        loadUserData(); // Reset button
+        console.error("Ad error:", error);
+        WebApp.showAlert("Ad was skipped or failed. No reward was given.");
+        loadUserData(); // Reload data even on failure to re-enable button
     }
 };
 
