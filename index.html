@@ -1428,7 +1428,6 @@ async function loadLeaderboardData() {
         const users = [];
         snapshot.forEach(childSnapshot => {
             const user = childSnapshot.val();
-            // Critical NaN check during data processing
             const userCoins = parseFloat(user.coins);
             if (user.userName && !isNaN(userCoins)) {
                 users.push({
@@ -1439,13 +1438,15 @@ async function loadLeaderboardData() {
             }
         });
         
-        users.sort((a, b) => b.coins - a.coins);
+        // ===== LEADERBOARD FIX: This is the correct way to sort the list from Firebase =====
+        users.reverse();
+        // ==============================================================================
 
         renderLeaderboard(users);
 
     } catch (error) {
         console.error("Error loading leaderboard:", error);
-        listContainer.innerHTML = '<p style="text-align: center; color: var(--danger-color);">Could not load leaderboard.</p>';
+        listContainer.innerHTML = '<p style="text-align: center; color: #f44336;">Could not load leaderboard.</p>';
     }
 }
 
