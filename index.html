@@ -1271,6 +1271,7 @@ function startAdTaskCooldownTimer(taskId, duration) {
 }
 
 window.watchRewardAd = async (taskId) => {
+window.watchRewardAd = async (taskId) => {
     const task = allAdTasks[taskId];
     if (!task) {
         WebApp.showAlert("This task is no longer available.");
@@ -1287,40 +1288,44 @@ window.watchRewardAd = async (taskId) => {
     button.disabled = true;
     button.innerText = '...';
 
-    // === UPDATED LOGIC (Case Insensitive Fix) ===
+    // ============================================
+    // 🔍 DEBUGGING ALERT SYSTEM (Yahan Check Karein)
+    // ============================================
+    
+    // Database se value nikal rahe hain
+    const providerName = (task.provider || "VALUE_MISSING").toLowerCase().trim();
+
+    // 1. Check Adexora Script
+    const isAdexoraLoaded = (typeof window.showAdexora === 'function') ? "YES" : "NO";
+
+    // 📢 YE ALERT DIKHAYEGA ASLI PROBLEM
+    WebApp.showAlert(`Database Value: [${providerName}]\nScript Loaded: [${isAdexoraLoaded}]`);
+
+    // ============================================
+
     let showAdPromise;
-    
-    // Provider ko small letters me convert karke check karega
-    const providerName = (task.provider || "").toLowerCase().trim();
-    
-    console.log("Current Task Provider is:", providerName); // Console me check karne ke liye
 
     if (providerName === 'adsgram') {
         showAdPromise = window.Adsgram.init({ blockId: task.blockId }).show();
     } 
     else if (providerName === 'adexora') {
-        // Adexora Logic
-        if (typeof window.showAdexora === 'function') {
+        if (isAdexoraLoaded === "YES") {
              showAdPromise = window.showAdexora();
         } else {
-             console.error("Adexora SDK not loaded!");
-             WebApp.showAlert("Adexora ads are not ready yet.");
+             WebApp.showAlert("❌ Error: Adexora script <head> me nahi mili!");
              button.disabled = false;
              button.innerText = 'Watch';
              return;
         }
     } 
     else {
-        // Default (Monetag/Other) - Agar provider match nahi hua to ye chalega
-        console.log("Provider not matched, showing Monetag default.");
+        // Agar providerName match nahi hua to ye chalega
         showAdPromise = show_9969043();
     }
-    // =================================
 
     try {
         await showAdPromise;
         const newCount = progress.watchedCount + 1;
-        
         const currentCoins = parseFloat(window.coins) || 0;
         const reward = parseFloat(task.reward) || 0;
 
@@ -1344,7 +1349,7 @@ window.watchRewardAd = async (taskId) => {
         loadUserData(); 
     } catch (error) {
         console.error("Ad error:", error);
-        WebApp.showAlert("Ad was skipped or failed. No reward was given.");
+        WebApp.showAlert("Ad was skipped or failed.");
         loadUserData(); 
     }
 };
