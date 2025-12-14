@@ -24,6 +24,9 @@
     --border-color: #30363D;
     --gradient-start: #1c0f2b; /* Deep Purple */
     --gradient-end: #0a0c24;   /* Deep Blue */
+    --rank-1-color: #FFD700;
+    --rank-2-color: #C0C0C0;
+    --rank-3-color: #CD7F32;
 }
 
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins', sans-serif}
@@ -62,7 +65,8 @@ header{
 header .profile{cursor:pointer;display:flex;align-items:center;gap:10px}
 header .profile img{width:45px;height:45px;border-radius:50%;border:2px solid var(--primary-glow)}
 header .profile span{font-weight:600;color: var(--text-light)}
-header .msg-icon{cursor:pointer;font-size:26px;color:var(--primary-glow)}
+.header-icons { display: flex; align-items: center; gap: 20px; }
+.msg-icon, .leaderboard-icon {cursor:pointer;font-size:26px;color:var(--primary-glow)}
 
 main{
   flex:1;
@@ -75,14 +79,33 @@ main{
   overflow-y: auto; /* Allow scrolling within main content */
 }
 .section{display:none;width:100%;padding:20px;animation:fadeIn 0.3s ease;}
-#home{display:block;}
+
+/* --- HOME SECTION FIX FOR NO-SCROLL --- */
+#home{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%; /* Take full available height */
+    padding-bottom: 0;
+    padding-top: 0;
+}
+#home-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+}
+/* --- END OF FIX --- */
+
 #home h2{font-size:24px;margin-bottom:5px;color:var(--text-light);text-align: center;}
-#totalCoins{font-size:48px;color:var(--secondary-glow);font-weight:700;margin-bottom:40px;text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);text-align: center;}
-.circle-container{position:relative;display:flex;align-items:center;justify-content:center;width: 100%;margin-top: 20px;}
+#totalCoins{font-size:48px;color:var(--secondary-glow);font-weight:700;margin-bottom:20px;text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);text-align: center;}
+.circle-container{position:relative;display:flex;align-items:center;justify-content:center;width: 100%; margin-top: 10px;}
 
 .circle {
-    width:280px;
-    height:280px;
+    width:250px;
+    height:250px;
     border-radius:50%;
     background: radial-gradient(ellipse at center, rgba(13, 17, 23, 0.1), transparent 70%),
                 radial-gradient(ellipse at center, rgba(0, 229, 255, 0.1), var(--bg-dark) 75%);
@@ -206,10 +229,9 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
   to { box-shadow: 0 0 15px var(--secondary-glow), 0 0 35px var(--secondary-glow), 0 0 50px var(--secondary-glow); }
 }
 
-.mine-btn { margin-top: 40px; }
-#miningCountdown {color: var(--text-light); font-size: 18px; margin-top: 10px; font-weight: 600; text-align: center;}
+#miningCountdown {color: var(--text-light); font-size: 16px; margin-top: 10px; font-weight: 600; text-align: center;}
 #adStatus {color: var(--secondary-glow); font-size: 16px; margin-top: 10px; font-weight: 600; text-align: center;}
-.wallet-summary, .referral-box, .referral-details, .gift-container, .history-container, .modal-content {
+.wallet-summary, .modal-content {
     background: var(--bg-light); padding: 20px; border-radius: 12px; margin: 20px 0;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5); border: 1px solid var(--border-color); text-align: center;
 }
@@ -279,7 +301,7 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     color: var(--secondary-glow);
     font-weight: 700;
 }
-/* === NEW STYLES FOR AD TASK LIST === */
+/* === AD TASK LIST STYLES === */
 #ad-task-list {
     width: 100%;
     display: flex;
@@ -292,55 +314,61 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     align-items: center;
     padding: 12px 15px;
     border-radius: 12px;
-    background-color: #3B82F6; /* Default color, will be overridden by JS */
+    background-color: #3B82F6;
     color: white;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
-
-.ad-task-icon img {
-    width: 40px;
-    height: 40px;
-    margin-right: 15px;
-}
-
-.ad-task-info {
-    flex-grow: 1;
-}
-
-.ad-task-info .title {
-    font-weight: 700;
-    font-size: 1.1em;
-}
-
-.ad-task-info .limit {
-    font-size: 0.9em;
-    opacity: 0.8;
-}
-
+.ad-task-icon img { width: 40px; height: 40px; margin-right: 15px; }
+.ad-task-info { flex-grow: 1; }
+.ad-task-info .title { font-weight: 700; font-size: 1.1em; }
+.ad-task-info .limit { font-size: 0.9em; opacity: 0.8; }
 .ad-task-button button {
-    background-color: white;
-    color: #333;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 20px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background-color 0.2s, transform 0.2s;
-    min-width: 80px;
-    text-align: center;
+    background-color: white; color: #333; border: none; border-radius: 8px; padding: 10px 20px;
+    font-weight: 700; cursor: pointer; transition: background-color 0.2s, transform 0.2s;
+    min-width: 80px; text-align: center;
 }
+.ad-task-button button:hover:enabled { background-color: #f0f0f0; transform: scale(1.05); }
+.ad-task-button button:disabled { background-color: #ccc; color: #666; cursor: not-allowed; }
 
-.ad-task-button button:hover:enabled {
-    background-color: #f0f0f0;
-    transform: scale(1.05);
+/* === LEADERBOARD STYLES === */
+.top-ranks { display: flex; justify-content: center; align-items: flex-end; gap: 10px; margin-bottom: 30px; }
+.rank-card { text-align: center; }
+.rank-card .initials-circle {
+    width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 32px; font-weight: 700; margin: 0 auto 10px;
+    border: 4px solid;
+    position: relative;
 }
-
-.ad-task-button button:disabled {
-    background-color: #ccc;
-    color: #666;
-    cursor: not-allowed;
+.rank-card.rank-1 .initials-circle {
+    width: 100px; height: 100px; font-size: 40px;
+    border-color: var(--rank-1-color); box-shadow: 0 0 20px var(--rank-1-color);
 }
-
+.rank-card.rank-2 .initials-circle { border-color: var(--rank-2-color); box-shadow: 0 0 15px var(--rank-2-color); }
+.rank-card.rank-3 .initials-circle { border-color: var(--rank-3-color); box-shadow: 0 0 15px var(--rank-3-color); }
+.rank-badge {
+    position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
+    background: var(--border-color); padding: 2px 8px; border-radius: 10px;
+    font-size: 12px; font-weight: 700;
+}
+.rank-card.rank-1 .rank-badge { background: var(--rank-1-color); color: #000; }
+.rank-card.rank-2 .rank-badge { background: var(--rank-2-color); color: #000; }
+.rank-card.rank-3 .rank-badge { background: var(--rank-3-color); color: #000; }
+.crown { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 30px; }
+.rank-card .username { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; }
+.rank-card .coins { font-size: 0.9em; color: var(--secondary-glow); }
+.leaderboard-list { display: flex; flex-direction: column; gap: 10px; max-height: 40vh; overflow-y: auto; padding-right: 5px; }
+.list-item {
+    display: flex; align-items: center; background: var(--bg-light); padding: 10px; border-radius: 8px;
+}
+.list-item .rank { font-weight: 700; color: var(--text-dark); width: 40px; }
+.list-item .initials-circle {
+    width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: white; margin-right: 15px; flex-shrink: 0;
+}
+.list-item .user-info { flex-grow: 1; }
+.list-item .user-info .username { font-weight: 600; }
+.list-item .user-info .inr-value { font-size: 0.8em; color: var(--primary-glow); }
+.list-item .coins { font-weight: 700; color: var(--secondary-glow); }
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -348,26 +376,33 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
 
 <div id="app-content" style="width: 100%; height: 100%; display: flex; flex-direction: column;">
     <header>
-    <div class="profile" onclick="showProfile()">
-    <img id="profile-img" src="https://i.pravatar.cc/45" alt="Profile">
-    <span id="username">Loading...</span> </div>
-    <div class="msg-icon" onclick="showMsg()">💬</div>
+        <div class="profile" onclick="showProfile()">
+            <img id="profile-img" src="https://i.pravatar.cc/45" alt="Profile">
+            <span id="username">Loading...</span> 
+        </div>
+        <div class="header-icons">
+            <span class="leaderboard-icon" onclick="showLeaderboard()">🏆</span>
+            <span class="msg-icon" onclick="showMsg()">💬</span>
+        </div>
     </header>
     <main>
     <section id="home" class="section">
-    <div id="totalCoins"><span id="coinCount">0</span></div>
-    <h2>Your Coins</h2>
-
-    <div class="circle-container">
-    <div class="circle" id="mineCircle">
-        <div class="mining-visual"></div>
-        <div id="miningEffectContainer"></div>
-    </div>
-    </div>
-    <button class="action-btn ad-btn" id="watchAdBtn" onclick="watchAd()">🎬 Watch Ad</button>
-    <div id="adStatus">Ads Watched: 0/10</div>
-    <button class="action-btn mine-btn" id="mineBtn" onclick="startDailyMining()">🪙 Start Mining</button>
-    <div id="miningCountdown">Click to start 1 hour session</div>
+        <div id="home-content-wrapper">
+            <div id="totalCoins"><span id="coinCount">0</span></div>
+            <h2>Your Coins</h2>
+            <div class="circle-container">
+                <div class="circle" id="mineCircle">
+                    <div class="mining-visual"></div>
+                    <div id="miningEffectContainer"></div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <button class="action-btn ad-btn" id="watchAdBtn" onclick="watchAd()">🎬 Watch Ad</button>
+            <div id="adStatus">Ads Watched: 0/10</div>
+            <button class="action-btn mine-btn" id="mineBtn" onclick="startDailyMining()">🪙 Watch Ads to Unlock</button>
+            <div id="miningCountdown">Watch ads to start 1 hour session</div>
+        </div>
     </section>
 
     <section id="task" class="section">
@@ -438,6 +473,16 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
                     </tbody>
                 </table>
             </div>
+        </div>
+    </section>
+    
+    <section id="leaderboard" class="section">
+        <h2 style="text-align: center; color: var(--primary-glow); margin-bottom: 25px;">🏆 Leaderboard</h2>
+        <div class="top-ranks" id="top-ranks-container">
+             <!-- Top 3 will be dynamically inserted here -->
+        </div>
+        <div class="leaderboard-list" id="leaderboard-list-container">
+            <p style="text-align: center; color: #777;">Loading rankings...</p>
         </div>
     </section>
 
@@ -543,7 +588,7 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, update, push, get, query, orderByChild, equalTo, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, update, push, get, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 const WebApp = window.Telegram.WebApp;
 WebApp.ready();
@@ -585,6 +630,7 @@ const database = getDatabase(app);
 
 // Database References
 const DB_NODE_PATH = 'users/' + TELEGRAM_USER_ID;
+const USERS_REF = ref(database, 'users');
 const ADMIN_SETTINGS_REF = ref(database, 'admin_settings');
 const TASKS_REF = ref(database, 'tasks');
 const WITHDRAWALS_REF = ref(database, 'withdrawals');
@@ -621,6 +667,7 @@ let withdrawalSettings = {
     crypto: { locked: false, message: '' }
 };
 let userCountry = ''; 
+let leaderboardDataLoaded = false;
 
 // DOM Elements
 const mineButton = document.getElementById('mineBtn');
@@ -699,6 +746,8 @@ async function getUserCountry() {
 function loadUserData() {
     onValue(window.dbRef, async (snapshot) => {
         let data = snapshot.val();
+        let mustFixNaN = false;
+
         if (!data) {
             console.log("New user detected. Creating profile...");
             const newUserCountry = await getUserCountry();
@@ -721,11 +770,20 @@ function loadUserData() {
             return;
         }
         
+        // BUG FIX (Important): Check for NaN and prepare to fix it.
+        if (isNaN(parseFloat(data.coins))) {
+            mustFixNaN = true;
+            data.coins = 0; 
+        }
+
         userCountry = data.country;
         if (data.country && data.country !== 'IN') COINS_PER_INCREMENT = INTL_COINS_PER_INCREMENT;
         else COINS_PER_INCREMENT = 0.1;
         
         const updates = { lastActive: Date.now(), userName: USER_NAME };
+        if (mustFixNaN) {
+            updates.coins = 0; // Overwrite NaN in the database.
+        }
         const fetchedCountry = await getUserCountry();
         if (fetchedCountry && data.country !== fetchedCountry) updates.country = fetchedCountry;
 
@@ -1133,7 +1191,7 @@ function updateCountdown() {
     const remainingSessionTime = window.miningEndTime - Date.now();
     if (remainingSessionTime <= 0) { stopMining(); return; }
     mineCircle.classList.add('mining-active-glow');
-    mineButton.disabled = true; mineButton.innerText = '⛏️ Mining Active'; mineButton.style.background = '#808080';
+    mineButton.disabled = true; mineButton.innerText = '⛏️ Mining Active';
     countdownDisplay.innerText = 'Time Left: ' + formatTime(remainingSessionTime);
 }
 function resumeMiningSession() {
@@ -1180,7 +1238,7 @@ function startCooldownCountdown() {
             }
             updateMiningButtonState(); return;
         }
-        mineButton.disabled = true; mineButton.innerText = '⏳ Cooldown Active'; mineButton.style.background = '#808080';
+        mineButton.disabled = true; mineButton.innerText = '⏳ Cooldown Active';
         countdownDisplay.innerText = 'Next Mine in: ' + formatTime(remainingCooldown);
         updateAdStatus();
     }, 1000);
@@ -1194,20 +1252,20 @@ function updateMiningButtonState() {
     else if (isAdsComplete) {
         if(miningEffectContainer) miningEffectContainer.innerHTML = '';
         mineCircle.classList.remove('mining-active-glow');
-        mineButton.disabled = false; mineButton.innerText = '🪙 Start Mining'; mineButton.style.background = 'var(--primary-glow)';
+        mineButton.disabled = false; mineButton.innerText = '🪙 Start Mining';
         countdownDisplay.innerText = 'Click to start 1 hour session';
     } else {
         stopAllMiningSounds();
         if(miningEffectContainer) miningEffectContainer.innerHTML = '';
         mineCircle.classList.remove('mining-active-glow');
-        mineButton.disabled = true; mineButton.innerText = `🔒 Watch Ads to Unlock`; mineButton.style.background = '#808080';
+        mineButton.disabled = true; mineButton.innerText = `🔒 Watch Ads to Unlock`;
         countdownDisplay.innerText = `Watch ${window.ADS_REQUIRED - window.adsWatched} more ads to start.`;
     }
     updateSoundState();
 }
 
 // ===================================================
-// START: NEW DYNAMIC AD TASK SYSTEM
+// START: DYNAMIC AD TASK SYSTEM
 // ===================================================
 
 function loadAdTasks() {
@@ -1335,8 +1393,118 @@ window.watchRewardAd = async (taskId) => {
 };
 
 // ===================================================
-// END: NEW DYNAMIC AD TASK SYSTEM
+// END: DYNAMIC AD TASK SYSTEM
 // ===================================================
+
+// ===================================================
+// START: LEADERBOARD SYSTEM
+// ===================================================
+window.showLeaderboard = () => {
+    // We need to find the currently active button to pass to showSection
+    const currentActiveButton = document.querySelector('.nav-btn.active');
+    showSection('leaderboard', currentActiveButton); // Keep nav highlight consistent
+    
+    if (!leaderboardDataLoaded) {
+        loadLeaderboardData();
+    }
+}
+
+async function loadLeaderboardData() {
+    leaderboardDataLoaded = true;
+    const topRanksContainer = document.getElementById('top-ranks-container');
+    const listContainer = document.getElementById('leaderboard-list-container');
+    topRanksContainer.innerHTML = '';
+    listContainer.innerHTML = '<p style="text-align: center; color: #777;">Fetching top players...</p>';
+
+    try {
+        const usersQuery = query(USERS_REF, orderByChild('coins'), limitToLast(100));
+        const snapshot = await get(usersQuery);
+
+        if (!snapshot.exists()) {
+            listContainer.innerHTML = '<p style="text-align: center; color: #777;">No players found yet.</p>';
+            return;
+        }
+
+        const users = [];
+        snapshot.forEach(childSnapshot => {
+            const user = childSnapshot.val();
+            // Critical NaN check during data processing
+            const userCoins = parseFloat(user.coins);
+            if (user.userName && !isNaN(userCoins)) {
+                users.push({
+                    id: childSnapshot.key,
+                    userName: user.userName,
+                    coins: userCoins
+                });
+            }
+        });
+        
+        users.sort((a, b) => b.coins - a.coins);
+
+        renderLeaderboard(users);
+
+    } catch (error) {
+        console.error("Error loading leaderboard:", error);
+        listContainer.innerHTML = '<p style="text-align: center; color: var(--danger-color);">Could not load leaderboard.</p>';
+    }
+}
+
+function renderLeaderboard(users) {
+    const topRanksContainer = document.getElementById('top-ranks-container');
+    const listContainer = document.getElementById('leaderboard-list-container');
+    topRanksContainer.innerHTML = '';
+    listContainer.innerHTML = '';
+    
+    // Render Top 3
+    users.slice(0, 3).forEach((user, index) => {
+        const rank = index + 1;
+        const rankCard = document.createElement('div');
+        rankCard.className = `rank-card rank-${rank}`;
+        
+        const initials = user.userName.substring(0, 2).toUpperCase();
+        
+        rankCard.innerHTML = `
+            <div class="initials-circle">
+                ${rank === 1 ? '<span class="crown">👑</span>' : ''}
+                ${initials}
+                <span class="rank-badge">Rank ${rank}</span>
+            </div>
+            <div class="username">${user.userName}</div>
+            <div class="coins">${Math.floor(user.coins).toLocaleString()}</div>
+        `;
+        topRanksContainer.appendChild(rankCard);
+    });
+
+    // Render ranks 4 and below
+    if (users.length <= 3) {
+        listContainer.innerHTML = '<p style="text-align: center; color: #777;">More players needed for full rankings.</p>';
+    } else {
+        users.slice(3).forEach((user, index) => {
+            const rank = index + 4;
+            const listItem = document.createElement('div');
+            listItem.className = 'list-item';
+            
+            const initials = user.userName.substring(0, 2).toUpperCase();
+            const inrValue = (user.coins / 3000).toFixed(2);
+            
+            listItem.innerHTML = `
+                <div class="rank">#${rank}</div>
+                <div class="initials-circle" style="background-color: hsl(${Math.random() * 360}, 50%, 50%)">${initials}</div>
+                <div class="user-info">
+                    <div class="username">${user.userName}</div>
+                    <div class="inr-value">₹${inrValue}</div>
+                </div>
+                <div class="coins">${Math.floor(user.coins).toLocaleString()} Coins</div>
+            `;
+            listContainer.appendChild(listItem);
+        });
+    }
+}
+
+// ===================================================
+// END: LEADERBOARD SYSTEM
+// ===================================================
+
 
 window.showWithdrawalModal = () => {
     if (withdrawalSettings.upi.locked) {
@@ -1550,7 +1718,7 @@ document.addEventListener('DOMContentLoaded', () => {
     listenForAdminPopups();
     document.body.addEventListener('click', primeAudio, { once: true });
     document.body.addEventListener('click', (event) => {
-        if (event.target.matches('button, .nav-btn, .msg-icon, .profile, .task-item, .close-btn, .task-nav-btn')) {
+        if (event.target.matches('button, .nav-btn, .msg-icon, .profile, .task-item, .close-btn, .task-nav-btn, .leaderboard-icon')) {
             playClickSound();
         }
     });
@@ -1588,8 +1756,11 @@ window.showSection = (sectionId, button) => {
   mainElement.style.display = 'flex';
   document.getElementById(sectionId).style.display = 'block';
 
-  document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-  button.classList.add('active');
+  // Only change active button if it's a nav button
+  if (button && button.classList.contains('nav-btn')) {
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    button.classList.add('active');
+  }
   updateSoundState();
 }
 
@@ -1605,4 +1776,4 @@ window.showProfile = () => { WebApp.showAlert(`User Profile:\nName: ${USER_NAME}
 window.showMsg = () => { WebApp.showPopup({message: 'Welcome to CoinMine!'}); }
 </script>
 </body>
-</html>
+    </html>
