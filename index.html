@@ -1287,24 +1287,44 @@ window.watchRewardAd = async (taskId) => {
     button.disabled = true;
     button.innerText = '...';
 
-    // === UPDATED LOGIC FOR ADEXORA ===
+    // ============================================
+    // 🔍 DEBUGGING ALERT SYSTEM (Yahan Check Karein)
+    // ============================================
+    
+    // Database se value nikal rahe hain
+    const providerName = (task.provider || "VALUE_MISSING").toLowerCase().trim();
+
+    // 1. Check Adexora Script
+    const isAdexoraLoaded = (typeof window.showAdexora === 'function') ? "YES" : "NO";
+
+    // 📢 YE ALERT DIKHAYEGA ASLI PROBLEM
+    WebApp.showAlert(`Database Value: [${providerName}]\nScript Loaded: [${isAdexoraLoaded}]`);
+
+    // ============================================
+
     let showAdPromise;
-    if (task.provider === 'adsgram') {
+
+    if (providerName === 'adsgram') {
         showAdPromise = window.Adsgram.init({ blockId: task.blockId }).show();
-    } else if (task.provider === 'adexora') {
-        // Adexora Logic
-        showAdPromise = window.showAdexora();
-    } else {
-        // Default (Monetag/Other)
+    } 
+    else if (providerName === 'adexora') {
+        if (isAdexoraLoaded === "YES") {
+             showAdPromise = window.showAdexora();
+        } else {
+             WebApp.showAlert("❌ Error: Adexora script <head> me nahi mili!");
+             button.disabled = false;
+             button.innerText = 'Watch';
+             return;
+        }
+    } 
+    else {
+        // Agar providerName match nahi hua to ye chalega
         showAdPromise = show_9969043();
     }
-    // =================================
 
     try {
         await showAdPromise;
         const newCount = progress.watchedCount + 1;
-        
-        // BUG FIX (Robust): Ensure all values are numbers
         const currentCoins = parseFloat(window.coins) || 0;
         const reward = parseFloat(task.reward) || 0;
 
@@ -1325,14 +1345,13 @@ window.watchRewardAd = async (taskId) => {
         await update(window.dbRef, updates);
         WebApp.showPopup({ message: `+${reward} Coins!` });
         playSuccessSound();
-        loadUserData(); // Reload all data to ensure perfect sync
+        loadUserData(); 
     } catch (error) {
         console.error("Ad error:", error);
-        WebApp.showAlert("Ad was skipped or failed. No reward was given.");
-        loadUserData(); // Reload data even on failure to re-enable button
+        WebApp.showAlert("Ad was skipped or failed.");
+        loadUserData(); 
     }
 };
-
 // ===================================================
 // END: NEW DYNAMIC AD TASK SYSTEM
 // ===================================================
