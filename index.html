@@ -8,7 +8,7 @@
 <title>CoinMine App - Telegram Mini App</title>
 
 <!-- =================================================================== -->
-<!-- SDKs -->
+<!-- SDKs: Monetag & Adsgram (Adexora loads dynamically) -->
 <script src='//libtl.com/sdk.js' data-zone='9969043' data-sdk='show_9969043'></script>
 <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 <!-- =================================================================== -->
@@ -30,7 +30,7 @@
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins', sans-serif}
 html, body {
     height: 100%;
-    overflow: hidden; 
+    overflow: hidden; /* Prevent scrolling on the body */
 }
 body{
   background-color: var(--bg-dark);
@@ -41,6 +41,8 @@ body{
   align-items:center;
   justify-content:flex-start;
   -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
   user-select: none;
 }
 header{
@@ -69,9 +71,9 @@ main{
   flex-direction:column;
   align-items:center;
   width:100%;
-  padding-top:76px; 
-  padding-bottom: 65px; 
-  overflow-y: auto; 
+  padding-top:76px; /* Header height */
+  padding-bottom: 65px; /* Navbar height */
+  overflow-y: auto; /* Allow scrolling within main content */
 }
 .section{display:none;width:100%;padding:20px;animation:fadeIn 0.3s ease;}
 #home{display:block;}
@@ -301,11 +303,6 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     height: 40px;
     margin-right: 15px;
 }
-/* Custom Icon for Text */
-.ad-task-icon {
-    font-size: 24px;
-    margin-right: 15px;
-}
 
 .ad-task-info {
     flex-grow: 1;
@@ -401,25 +398,9 @@ button.action-btn:disabled{cursor: not-allowed; opacity: 0.6; animation: none;}
     
     <section id="watch" class="section">
         <h2 style="text-align: center; color: var(--primary-glow); margin-bottom: 25px;">Watch Ads & Earn Coins</h2>
-        
-        <!-- EXISTING DYNAMIC TASKS (From Admin Panel) -->
         <div id="ad-task-list">
             <p style="text-align: center; color: #777;">Loading Ad Tasks...</p>
         </div>
-
-        <!-- === NEW FIXED ADEXORA TASK (Directly Hardcoded) === -->
-        <div class="ad-task-item" style="background-color: #9C27B0; margin-top: 15px; border: 2px solid var(--secondary-glow);">
-            <div class="ad-task-icon">🚀</div>
-            <div class="ad-task-info">
-                <div class="title">Adexora Power Ad (+75)</div>
-                <div class="limit" id="adexoraLimitText">Limit: 0/20 (Resets every 2h)</div>
-            </div>
-            <div class="ad-task-button">
-                <button id="btn-adexora-fixed" onclick="watchAdexoraFixed()">Watch</button>
-            </div>
-        </div>
-        <!-- ==================================================== -->
-
     </section>
 
     <section id="wallet" class="section">
@@ -582,7 +563,7 @@ try {
     console.error("Critical Error: Could not get Telegram user data.", error);
 }
 
-// Fallback for testing
+// Fallback for testing/dev (Remove in strict production if needed, but safe here)
 const TELEGRAM_USER_ID = telegramUser ? telegramUser.id.toString() : "TEST_USER_123";
 const USER_NAME = telegramUser ? (telegramUser.first_name + (telegramUser.last_name ? ' ' + telegramUser.last_name : '')) : "Test User";
 document.getElementById('username').innerText = USER_NAME;
@@ -618,9 +599,6 @@ window.miningEndTime = 0;
 window.adsWatched = 0;
 window.adsWatchedTimestamp = 0;
 window.adTaskProgress = {};
-// New state for fixed Adexora task
-window.adexoraFixedState = { count: 0, lastReset: 0 }; 
-
 let allAdTasks = {};
 window.dbRef = ref(database, DB_NODE_PATH);
 let miningInterval = null;
@@ -730,8 +708,7 @@ function loadUserData() {
                 adsWatchedTimestamp: 0, upiId: '', telegramId: TELEGRAM_USER_ID,
                 userName: USER_NAME, lastActive: Date.now(), joinDate: Date.now(),
                 country: newUserCountry || 'N/A',
-                adTaskProgress: {},
-                adexoraFixedState: { count: 0, lastReset: 0 } // Initialize new state
+                adTaskProgress: {}
             };
             
             try {
@@ -753,7 +730,6 @@ function loadUserData() {
         const fetchedCountry = await getUserCountry();
         if (fetchedCountry && data.country !== fetchedCountry) updates.country = fetchedCountry;
 
-        // Offline mining logic...
         if (!isInitialLoadComplete) {
             isInitialLoadComplete = true; 
             const lastSeen = data.lastActive || 0;
@@ -788,18 +764,7 @@ function loadUserData() {
         
         updateGlobalState(data); 
 
-        // Check Adexora Reset Logic immediately on load
-        if(window.adexoraFixedState) {
-            const COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 Hours
-            if (Date.now() - window.adexoraFixedState.lastReset > COOLDOWN_MS) {
-                window.adexoraFixedState.count = 0;
-                window.adexoraFixedState.lastReset = 0;
-                updates.adexoraFixedState = window.adexoraFixedState;
-            }
-            updateAdexoraFixedUI();
-        }
-
-        if (Object.keys(updates).length > 2 || (updates.country && data.country !== updates.country) || 'coins' in updates || updates.adexoraFixedState) {
+        if (Object.keys(updates).length > 2 || (updates.country && data.country !== updates.country) || 'coins' in updates) {
              update(window.dbRef, updates);
         }
 
@@ -1016,14 +981,15 @@ function loadWithdrawalHistory() {
     });
 }
 function updateGlobalState(data) {
+    // BUG FIX (Robust): Ensure coins is always a number. If it's NaN or undefined from DB, reset to 0.
     window.coins = parseFloat(data.coins) || 0;
+    
     window.dailyMinedTimestamp = data.dailyMinedTimestamp || 0;
     window.miningEndTime = data.miningEndTime || 0;
     window.adsWatched = data.adsWatched || 0;
     window.adsWatchedTimestamp = data.adsWatchedTimestamp || 0;
     window.upiId = data.upiId || '';
     window.adTaskProgress = data.adTaskProgress || {};
-    window.adexoraFixedState = data.adexoraFixedState || { count: 0, lastReset: 0 };
 }
 function processDataForStateUpdate() {
     if (window.miningEndTime > Date.now()) { resumeMiningSession(); }
@@ -1037,12 +1003,12 @@ function processDataForStateUpdate() {
     updateCoinDisplays();
     updateMiningButtonState();
     loadAdTasks();
-    updateAdexoraFixedUI();
 }
 window.updateDatabase = (updates) => {
     update(window.dbRef, updates).catch(error => console.error("Database Write Error:", error));
 };
 function updateCoinDisplays() {
+    // BUG FIX (Robust): Ensure coins is a valid number before displaying
     const currentCoins = parseFloat(window.coins) || 0;
     const inrValue = (currentCoins / 3000).toFixed(2);
     const coinsStr = Math.floor(currentCoins).toLocaleString();
@@ -1077,10 +1043,12 @@ window.watchAd = () => {
 
     try {
         if (typeof window.Adsgram === 'undefined') { throw new Error("Adsgram SDK not loaded"); }
+        
         const AdController = window.Adsgram.init({ blockId: "18940" });
 
         AdController.show().then((result) => {
             const newWatchedCount = window.adsWatched + 1;
+            // BUG FIX (Robust): Ensure all values are numbers before calculation
             const currentCoins = parseFloat(window.coins) || 0;
             const rewardCoins = parseFloat(window.AD_REWARD_COINS) || 5;
             
@@ -1101,7 +1069,7 @@ window.watchAd = () => {
                     WebApp.showPopup({ message: `Congratulations! You can now start mining!` });
                 }
                 playSuccessSound();
-                loadUserData();
+                loadUserData(); // Reload data to ensure sync
             });
         }).catch((result) => {
             WebApp.showAlert("Ad was skipped or failed. No reward was given.");
@@ -1178,6 +1146,7 @@ function resumeMiningSession() {
     incrementCounter = 0;
     
     miningInterval = setInterval(() => {
+        // BUG FIX (Robust): Ensure coins is a number before incrementing
         window.coins = (parseFloat(window.coins) || 0) + COINS_PER_INCREMENT;
         incrementCounter++;
         if (incrementCounter % 20 === 0) {
@@ -1284,7 +1253,7 @@ function loadAdTasks() {
     }
 
     if (!activeTasksFound) {
-        container.innerHTML = `<p style="text-align: center; color: #777;">No additional tasks available right now.</p>`;
+        container.innerHTML = `<p style="text-align: center; color: #777;">No Ad Tasks available right now. Check back later!</p>`;
     }
 }
 
@@ -1313,176 +1282,115 @@ function startAdTaskCooldownTimer(taskId, duration) {
     }, 1000);
 }
 
-// ===== FIXED WATCH AD FUNCTION (ADMIN PANEL TASKS) =====
+// ===== FIXED WATCH AD FUNCTION (BUG FIXED HERE) =====
 window.watchRewardAd = async (taskId) => {
     const task = allAdTasks[taskId];
-    if (!task) return;
+    if (!task) {
+        WebApp.showAlert("Task unavailable.");
+        return;
+    }
 
-    // 1. Get Provider and Normalize (Lowercase + Remove Spaces)
+    // 1. Provider Logic: Fix case sensitivity issue
     let rawProvider = (task.provider || 'monetag').toString().toLowerCase().trim();
     
+    // Debug Alert (Remove later if needed)
+    // WebApp.showAlert("Provider Found: " + rawProvider);
+
     const progress = window.adTaskProgress[taskId] || { watchedCount: 0, timestamp: 0 };
-    if (progress.watchedCount >= task.limit) { WebApp.showAlert("Limit reached."); return; }
+    if (progress.watchedCount >= task.limit) {
+        WebApp.showAlert("Daily limit reached for this task.");
+        return;
+    }
 
     const button = document.getElementById(`button-${taskId}`);
-    button.disabled = true; button.innerText = '...';
+    button.disabled = true;
+    button.innerText = 'Loading...';
 
     const showAdPromise = new Promise((resolve, reject) => {
-        // --- 1. ADEXORA CHECK ---
+        
+        // === 1. ADEXORA LOGIC ===
         if (rawProvider.includes('adexora')) {
              const scriptId = `adexora-script-${task.blockId}`;
-             const runAdexora = () => {
-                 if (typeof window.showAdexora === 'function') window.showAdexora().then(resolve).catch(reject);
-                 else reject("Adexora function missing.");
-             };
              
+             // Function to run ad
+             const runAdexora = () => {
+                 if (typeof window.showAdexora === 'function') {
+                     window.showAdexora().then(resolve).catch(reject);
+                 } else {
+                     reject("Adexora SDK loaded but function missing.");
+                 }
+             };
+
+             // Load Script if not present
              if (!document.getElementById(scriptId)) {
                  const script = document.createElement('script');
                  script.id = scriptId;
                  script.src = `https://adexora.com/cdn/ads.js?id=${task.blockId}`;
+                 
                  script.onload = () => { setTimeout(runAdexora, 500); };
-                 script.onerror = () => reject("Adexora failed to load.");
+                 script.onerror = () => reject("Failed to load Adexora script.");
                  document.body.appendChild(script);
              } else {
                  runAdexora();
              }
         } 
-        // --- 2. ADSGRAM CHECK ---
+        
+        // === 2. ADSGRAM LOGIC ===
         else if (rawProvider.includes('adsgram')) {
-             if(window.Adsgram) window.Adsgram.init({ blockId: task.blockId }).show().then(resolve).catch(reject);
-             else reject("Adsgram SDK missing.");
+             if (window.Adsgram) {
+                window.Adsgram.init({ blockId: task.blockId }).show().then(resolve).catch(reject);
+             } else {
+                reject("Adsgram SDK not found.");
+             }
         } 
-        // --- 3. MONETAG (Fallback) ---
+        
+        // === 3. MONETAG LOGIC (Default Fallback) ===
         else {
-             if (typeof show_9969043 === 'function') show_9969043().then(resolve).catch(reject);
-             else reject("Monetag missing.");
+             if (typeof show_9969043 === 'function') {
+                 show_9969043().then(resolve).catch(reject);
+             } else {
+                 reject("No ad provider found.");
+             }
         }
     });
 
     try {
         await showAdPromise;
+        
+        // --- Success Logic ---
         const newCount = progress.watchedCount + 1;
+        // Fix: Ensure numbers
+        const currentCoins = parseFloat(window.coins) || 0;
         const reward = parseFloat(task.reward) || 0;
+
         const updates = {};
-        updates.coins = (parseFloat(window.coins)||0) + reward;
+        updates.coins = currentCoins + reward;
         updates[`adTaskProgress/${taskId}/watchedCount`] = newCount;
-        if (newCount >= task.limit) updates[`adTaskProgress/${taskId}/timestamp`] = Date.now();
-        push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`), { reason: `${task.title} Reward`, amount: reward, timestamp: Date.now() });
+        if (newCount >= task.limit) {
+            updates[`adTaskProgress/${taskId}/timestamp`] = Date.now();
+        }
+
+        const historyRef = push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`));
+        updates[`coin_history/${historyRef.key}`] = {
+            reason: `${task.title} Reward`,
+            amount: reward,
+            timestamp: Date.now()
+        };
+
         await update(window.dbRef, updates);
-        WebApp.showPopup({ message: `+${reward} Coins!` });
+        WebApp.showPopup({ message: `Success! +${reward} Coins added.` });
         playSuccessSound();
         loadUserData();
     } catch (error) {
-        WebApp.showAlert("Ad failed/skipped.");
-        loadUserData();
+        console.error("Ad failed:", error);
+        WebApp.showAlert("Ad skipped or failed to load. Try again.");
+        loadUserData(); // Reset button
     }
 };
 
-// =========================================================================
-// === NEW: HARDCODED ADEXORA TASK LOGIC (20 Limit, 2h Cooldown, 75 Coins) ===
-// =========================================================================
-
-function updateAdexoraFixedUI() {
-    const limitText = document.getElementById('adexoraLimitText');
-    const button = document.getElementById('btn-adexora-fixed');
-    if (!window.adexoraFixedState) return;
-
-    // Check Cooldown
-    const COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 Hours
-    const timeSinceLastReset = Date.now() - window.adexoraFixedState.lastReset;
-    const isResetReady = timeSinceLastReset > COOLDOWN_MS;
-
-    // Logic: If limit reached AND not yet reset time -> Cooldown
-    if (window.adexoraFixedState.count >= 20 && !isResetReady) {
-        const timeLeft = COOLDOWN_MS - timeSinceLastReset;
-        limitText.innerText = `Reset in: ${formatTime(timeLeft)}`;
-        button.disabled = true;
-        button.innerText = 'Wait...';
-        
-        // Start live timer if not existing
-        if(!button.interval) {
-            button.interval = setInterval(() => updateAdexoraFixedUI(), 1000);
-        }
-    } else {
-        // Active
-        if(button.interval) { clearInterval(button.interval); button.interval = null; }
-        limitText.innerText = `Limit: ${window.adexoraFixedState.count}/20 (Resets every 2h)`;
-        button.disabled = false;
-        button.innerText = 'Watch';
-    }
-}
-
-window.watchAdexoraFixed = async () => {
-    // 1. Check State
-    if (!window.adexoraFixedState) window.adexoraFixedState = { count: 0, lastReset: 0 };
-    
-    // 2. Check Logic (Reset if time passed)
-    const COOLDOWN_MS = 2 * 60 * 60 * 1000;
-    if (Date.now() - window.adexoraFixedState.lastReset > COOLDOWN_MS) {
-        window.adexoraFixedState.count = 0; // Reset count
-        window.adexoraFixedState.lastReset = Date.now(); // Set new reset cycle start
-        update(window.dbRef, { adexoraFixedState: window.adexoraFixedState });
-    }
-
-    // 3. Check Limit
-    if (window.adexoraFixedState.count >= 20) {
-        WebApp.showAlert("Daily limit reached. Wait for reset.");
-        return;
-    }
-
-    const button = document.getElementById('btn-adexora-fixed');
-    button.disabled = true; button.innerText = 'Loading...';
-
-    // 4. Show Adexora Ad (ID 1301)
-    const scriptId = 'adexora-script-fixed-1301';
-    
-    const runAd = () => {
-        if (typeof window.showAdexora === 'function') {
-            window.showAdexora().then(async () => {
-                // SUCCESS
-                const reward = 75;
-                const newCount = window.adexoraFixedState.count + 1;
-                
-                // If this was the first ad of the cycle, set timestamp
-                let updates = {
-                    coins: (parseFloat(window.coins) || 0) + reward,
-                    'adexoraFixedState/count': newCount
-                };
-                
-                if (window.adexoraFixedState.count === 0) {
-                    updates['adexoraFixedState/lastReset'] = Date.now();
-                }
-
-                push(ref(database, `users/${TELEGRAM_USER_ID}/coin_history`), { 
-                    reason: `Adexora Power Reward`, amount: reward, timestamp: Date.now() 
-                });
-
-                await update(window.dbRef, updates);
-                WebApp.showPopup({ message: `+${reward} Coins!` });
-                playSuccessSound();
-                loadUserData(); // UI refresh handled in loadUserData
-
-            }).catch((e) => {
-                WebApp.showAlert("Ad skipped or failed.");
-                button.disabled = false; button.innerText = 'Watch';
-            });
-        } else {
-            WebApp.showAlert("Ad script not loaded properly.");
-            button.disabled = false; button.innerText = 'Watch';
-        }
-    };
-
-    if (!document.getElementById(scriptId)) {
-        const script = document.createElement('script');
-        script.id = scriptId;
-        script.src = `https://adexora.com/cdn/ads.js?id=1301`; // YOUR ID
-        script.onload = () => { setTimeout(runAd, 1000); };
-        script.onerror = () => { WebApp.showAlert("Connection failed."); button.disabled = false; button.innerText = 'Watch'; };
-        document.body.appendChild(script);
-    } else {
-        runAd();
-    }
-};
+// ===================================================
+// END: NEW DYNAMIC AD TASK SYSTEM
+// ===================================================
 
 window.showWithdrawalModal = () => {
     if (withdrawalSettings.upi.locked) {
