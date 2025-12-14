@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -553,8 +554,7 @@ WebApp.expand();
 let telegramUser = null;
 try {
     telegramUser = WebApp.initDataUnsafe.user;
-    if (!telegramUser || !telegramUser.id) {
-        WebApp.showAlert("Could not verify your Telegram account. Please try restarting the app through Telegram.", () => WebApp.close());
+    if (!telegramUser || !telegramUser.id) {WebApp.showAlert("Could not verify your Telegram account. Please try restarting the app through Telegram.", () => WebApp.close());
         throw new Error("Missing Telegram User ID");
     }
 } catch (error) {
@@ -1280,6 +1280,7 @@ function startAdTaskCooldownTimer(taskId, duration) {
     }, 1000);
 }
 
+// ===== UPDATED FUNCTION TO SUPPORT ADEXORA =====
 window.watchRewardAd = async (taskId) => {
     const task = allAdTasks[taskId];
     if (!task) {
@@ -1297,15 +1298,52 @@ window.watchRewardAd = async (taskId) => {
     button.disabled = true;
     button.innerText = '...';
 
-    const showAdPromise = task.provider === 'adsgram' 
-        ? window.Adsgram.init({ blockId: task.blockId }).show()
-        : show_9969043();
+    // === NEW LOGIC FOR MULTIPLE PROVIDERS ===
+    const showAdPromise = new Promise((resolve, reject) => {
+        if (task.provider === 'adsgram') {
+             // Adsgram Logic
+             window.Adsgram.init({ blockId: task.blockId }).show().then(resolve).catch(reject);
+        } 
+        else if (task.provider === 'adexora') {
+             // Adexora Logic
+             const scriptId = `adexora-script-${task.blockId}`;
+             const loadAndShow = () => {
+                 if (typeof window.showAdexora === 'function') {
+                     window.showAdexora().then(resolve).catch(reject);
+                 } else {
+                     reject("Adexora SDK not loaded properly.");
+                 }
+             };
+
+             // Check if script already exists
+             if (!document.getElementById(scriptId)) {
+                 const script = document.createElement('script');
+                 script.id = scriptId;
+                 script.src = `https://adexora.com/cdn/ads.js?id=${task.blockId}`;
+                 document.body.appendChild(script);
+                 
+                 script.onload = loadAndShow;
+                 script.onerror = () => reject("Failed to load Adexora script");
+             } else {
+                 loadAndShow();
+             }
+        }
+        else {
+             // Default to Monetag (Global function show_9969043)
+             // We assume the global function is show_9969043 based on your header code
+             if (typeof show_9969043 === 'function') {
+                 show_9969043().then(resolve).catch(reject);
+             } else {
+                 reject("Ad provider not found or supported.");
+             }
+        }
+    });
 
     try {
         await showAdPromise;
-        const newCount = progress.watchedCount + 1;
         
-        // BUG FIX (Robust): Ensure all values are numbers
+        // Success Logic
+        const newCount = progress.watchedCount + 1;
         const currentCoins = parseFloat(window.coins) || 0;
         const reward = parseFloat(task.reward) || 0;
 
@@ -1326,11 +1364,11 @@ window.watchRewardAd = async (taskId) => {
         await update(window.dbRef, updates);
         WebApp.showPopup({ message: `+${reward} Coins!` });
         playSuccessSound();
-        loadUserData(); // Reload all data to ensure perfect sync
+        loadUserData(); 
     } catch (error) {
         console.error("Ad error:", error);
         WebApp.showAlert("Ad was skipped or failed. No reward was given.");
-        loadUserData(); // Reload data even on failure to re-enable button
+        loadUserData(); // Reset button state
     }
 };
 
@@ -1364,7 +1402,7 @@ window.showCryptoModal = () => {
         WebApp.showPopup({ title: 'Crypto Unavailable', message: withdrawalSettings.crypto.message || 'Crypto withdrawals are temporarily disabled.' });
         return;
     }
-    cryptoModal.style.display = "block";
+    cryptoModal.style.display= "block";
     document.getElementById('cryptoAmount').value = '';
     document.getElementById('cryptoAddress').value = '';
     submitCryptoBtn.disabled = true;
