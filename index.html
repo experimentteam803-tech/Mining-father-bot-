@@ -1033,7 +1033,7 @@ window.watchAd = () => {
     try {
         if (typeof window.Adsgram === 'undefined') { throw new Error("Adsgram SDK not loaded"); }
         
-        const AdController = window.Adsgram.init({ blockId: "18940" });
+        const AdController = window.Adsgram.init({ blockId: "19245" });
 
         AdController.show().then((result) => {
             const newWatchedCount = window.adsWatched + 1;
